@@ -1,0 +1,27 @@
+
+
+buildscript {
+    ext.kotlin_version = rootProject.kotlinVersion
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.kotlinVersion}"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:${rootProject.dokkaVersion}"
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
+    }
+}
+
+apply plugin: 'kotlin-platform-common'
+apply from: '../common.gradle'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${rootProject.kotlinVersion}"
+    testCompile "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version"
+}
