@@ -5,14 +5,11 @@ import java.text.DecimalFormat
 import java.util.*
 import java.util.Date
 
-actual object KotlinTime {
-    actual fun now(): TimeStamp {
-        return TimeStamp(System.currentTimeMillis())
-    }
+actual object Locales {
 
     private val javaLocale = java.util.Locale.getDefault()
     private val javaTimeZone = java.util.TimeZone.getDefault()
-    actual val defaultLocale: Locale = Locale(
+    actual var defaultLocale: Locale = Locale(
             language = javaLocale.language.substringBefore('-'),
             languageVariant = javaLocale.language.substringAfter('-', ""),
             getTimeOffset = {

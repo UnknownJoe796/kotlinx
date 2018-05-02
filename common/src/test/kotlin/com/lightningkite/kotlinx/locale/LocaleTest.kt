@@ -6,19 +6,19 @@ import kotlin.test.assertEquals
 class LocaleTest {
     @Test
     fun compare() {
-        val now = KotlinTime.now()
-        val nowRendered = KotlinTime.defaultLocale.renderTimeStamp(now)
+        val now = Timestamps.now()
+        val nowRendered = Locales.defaultLocale.renderTimeStamp(now)
         println(nowRendered)
 
         val date = now.date()
         println(date.daysSinceEpoch)
-        println(KotlinTime.defaultLocale.renderDate(date))
+        println(Locales.defaultLocale.renderDate(date))
         val time = now.time()
         println(time.millisecondsSinceMidnight)
-        println(KotlinTime.defaultLocale.renderTime(time))
+        println(Locales.defaultLocale.renderTime(time))
 
         val redone = TimeStamp(date, time)
-        val nowRedoneRerendered = KotlinTime.defaultLocale.renderTimeStamp(redone)
+        val nowRedoneRerendered = Locales.defaultLocale.renderTimeStamp(redone)
         println(nowRedoneRerendered)
 
         assertEquals(now, redone)
@@ -27,12 +27,12 @@ class LocaleTest {
     @Test
     fun renderDateTest() {
         println("This should render as Jan 1, 1970")
-        println(KotlinTime.defaultLocale.renderDate(Date(0)))
+        println(Locales.defaultLocale.renderDate(Date(0)))
     }
 
     @Test
     fun bringTogether() {
         var stamp = TimeStamp(Date(365), Time(8 * 60 * 60 * 1000))
-        println(KotlinTime.defaultLocale.renderTimeStamp(stamp))
+        println(Locales.defaultLocale.renderTimeStamp(stamp))
     }
 }
