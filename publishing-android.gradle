@@ -6,12 +6,12 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.kotlinVersion}"
-        classpath "org.jetbrains.dokka:dokka-gradle-plugin:${rootProject.dokkaVersion}"
+        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${rootProject.dokkaVersion}"
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
+        classpath "digital.wup:android-maven-publish:${rootProject.androidMavenPublishPluginVersion}"
     }
 }
-
-apply plugin: 'org.jetbrains.dokka'
+apply plugin: 'org.jetbrains.dokka-android'
 
 dokka {
     outputFormat = 'html'
@@ -28,29 +28,13 @@ dokka {
         // Suffix which is used to append the line number to the URL. Use #L for GitHub
         suffix = "#L"
     }
-    externalDocumentationLink { url = new URL("http://square.github.io/okhttp/3.x/okhttp/") }
-    externalDocumentationLink { url = new URL("http://fasterxml.github.io/jackson-core/javadoc/2.9/") }
-    externalDocumentationLink { url = new URL("http://fasterxml.github.io/jackson-databind/javadoc/2.9/") }
-
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/utils/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/jvm-utils/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/jackson/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/okhttp/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/okhttp-jackson/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/lifecycle/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/observable-property/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/observable-property-jvm/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/observable-property-lifecycle/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/observable-list/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/observable-list-lifecycle/") }
-    externalDocumentationLink { url = new URL("https://lightningkite.github.io/lk-kotlin/reflect/") }
 }
 
 //Bintray
 
 task sourceJar(type: Jar) {
     classifier 'sources'
-    from sourceSets.main.allSource
+    from android.sourceSets.main.java.srcDirs
 }
 
 task dokkaJar(type: Jar) {
@@ -62,12 +46,13 @@ task dokkaJar(type: Jar) {
 
 
 apply plugin: 'maven-publish'
+apply plugin: 'digital.wup.android-maven-publish'
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        mavenAar(MavenPublication){
+            from components.android
             artifact tasks.sourceJar
-            artifact tasks.dokkaJar
+//            artifact tasks.dokkaJar
             groupId rootProject.repositoryGroupName
             artifactId project.name
             version rootProject.libraryVersion
@@ -84,7 +69,7 @@ if (bintrayPropertiesFile.exists()) {
     bintray {
         user = bintrayProperties['bintrayUser']
         key = bintrayProperties['bintrayKey']
-        publications = ['mavenJava']
+        publications = ['mavenAar']
         publish = bintrayProperties['bintrayPublish']
         pkg {
             repo = rootProject.repositoryGroupName

@@ -14,7 +14,7 @@ buildscript {
 }
 
 apply plugin: 'kotlin-platform-common'
-apply from: '../common.gradle'
+apply from: '../publishing.gradle'
 
 repositories {
     mavenCentral()

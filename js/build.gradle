@@ -12,7 +12,7 @@ buildscript {
 }
 
 apply plugin: 'kotlin-platform-js'
-apply from: '../common.gradle'
+apply from: '../publishing.gradle'
 
 repositories {
     mavenCentral()
