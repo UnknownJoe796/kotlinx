@@ -26,6 +26,6 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:${rootProject.serializationVersion}"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-common:${rootProject.kotlinVersion}"
-    testImplementation "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version"
-    testImplementation "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-common:${rootProject.kotlinVersion}"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-annotations-common:${rootProject.kotlinVersion}"
 }

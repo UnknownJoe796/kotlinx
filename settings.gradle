@@ -1,4 +1,4 @@
 include ':common'
-include ':java'
+include ':jvm'
 include ':js'
 include ':native'
