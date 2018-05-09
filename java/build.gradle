@@ -12,6 +12,7 @@ buildscript {
 }
 
 apply plugin: 'kotlin-platform-jvm'
+apply plugin: 'kotlinx-serialization'
 apply from: '../publishing.gradle'
 
 repositories {

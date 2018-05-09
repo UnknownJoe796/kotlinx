@@ -10,7 +10,8 @@ actual object HttpClient {
     var resultThread: (() -> Unit) -> Unit = { it.invoke() }
     val okClient = OkHttpClient()
 
-    fun HttpBody.toOk(): RequestBody {
+    fun HttpBody.toOk(method:HttpMethod): RequestBody? {
+        if(method == HttpMethod.GET) return null
         return when (this) {
             is HttpBody.BByteArray -> {
                 RequestBody.create(MediaType.parse(contentType), this.value)
@@ -21,18 +22,20 @@ actual object HttpClient {
         }
     }
 
-    fun <T> Response.toKotlin(read: Response.() -> T): HttpResponse<T> = if (code() % 100 == 2) {
-        HttpResponse.Success(
-                code = code(),
-                headers = headers().toMultimap(),
-                result = read()
-        )
-    } else {
-        HttpResponse.Failure(
-                code = code(),
-                headers = headers().toMultimap(),
-                message = body()?.string() ?: ""
-        )
+    fun <T> Response.toKotlin(read: Response.() -> T): HttpResponse<T> {
+        return if (code() / 100 == 2) {
+            HttpResponse.Success(
+                    code = code(),
+                    headers = headers().toMultimap(),
+                    result = read()
+            )
+        } else {
+            HttpResponse.Failure(
+                    code = code(),
+                    headers = headers().toMultimap(),
+                    message = body()?.string() ?: ""
+            )
+        }
     }
 
     actual fun callString(
@@ -43,7 +46,7 @@ actual object HttpClient {
     ): DelayedResultFunction<HttpResponse<String>> = { callback ->
         val rq = Request.Builder()
                 .url(url)
-                .method(method.name, body.toOk())
+                .method(method.name, body.toOk(method))
                 .build()
         okClient.newCall(rq).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -75,7 +78,7 @@ actual object HttpClient {
     ): DelayedResultFunction<HttpResponse<ByteArray>> = { callback ->
         val rq = Request.Builder()
                 .url(url)
-                .method(method.name, body.toOk())
+                .method(method.name, body.toOk(method))
                 .build()
         okClient.newCall(rq).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {

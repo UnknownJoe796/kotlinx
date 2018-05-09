@@ -4,13 +4,13 @@ sealed class HttpResponse<T> {
     abstract val code:Int
     abstract val headers:Map<String, List<String>>
 
-    class Success<T>(
+    data class Success<T>(
             override val code: Int,
             override val headers: Map<String, List<String>>,
             val result:T
     ): HttpResponse<T>()
 
-    class Failure<T>(
+    data class Failure<T>(
             override val code: Int,
             override val headers: Map<String, List<String>>,
             val message:String,
@@ -20,11 +20,23 @@ sealed class HttpResponse<T> {
 
 inline fun <I, O> HttpResponse<I>.copy(convert:(I)->O):HttpResponse<O>{
     return when(this){
-        is HttpResponse.Success<I> -> HttpResponse.Success<O>(
-                code = code,
-                headers = headers,
-                result = convert(result)
-        )
+        is HttpResponse.Success<I> -> {
+            try{
+                val transformed = convert(result)
+                HttpResponse.Success<O>(
+                        code = code,
+                        headers = headers,
+                        result = transformed
+                )
+            } catch(e:Exception){
+                HttpResponse.Failure<O>(
+                        code = 0,
+                        headers = headers,
+                        message = e.message ?: "",
+                        exception = e
+                )
+            }
+        }
         is HttpResponse.Failure<I> -> HttpResponse.Failure<O>(
                 code = code,
                 headers = headers,
