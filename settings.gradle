@@ -1,4 +1,4 @@
 include ':common'
-include ':swing'
+include ':java'
 include ':js'
-include ':android'
+include ':native'
