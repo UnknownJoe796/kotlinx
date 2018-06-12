@@ -20,7 +20,7 @@ class MutableObservablePropertyMapped<S, T>(
         }
 
     val callback = { a: S ->
-        val wrapped = transformer(observable.value)
+        val wrapped = transformer(a)
         forEach { it.invoke(wrapped) }
     }
 

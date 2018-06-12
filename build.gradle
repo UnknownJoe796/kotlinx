@@ -5,7 +5,7 @@ buildscript {
     ext.repositoryGroupName = 'com.lightningkite.kotlinx'
     ext.kotlinVersion = '1.2.41'
     ext.kotlinNativeVersion = '0.6.2'
-    ext.libraryVersion = '0.4.0'
+    ext.libraryVersion = '0.5.0'
     ext.dokkaVersion = '0.9.16'
     ext.serializationVersion = '0.5.0'
     ext.androidMavenPublishPluginVersion = '3.1.1'

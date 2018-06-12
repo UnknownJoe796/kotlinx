@@ -23,6 +23,7 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.kotlinVersion}"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:${rootProject.kotlinVersion}"
     expectedBy project(":common")
     testImplementation "junit:junit:4.12"
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:${rootProject.kotlinVersion}"

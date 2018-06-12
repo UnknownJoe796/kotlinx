@@ -4,7 +4,6 @@ import com.lightningkite.kotlinx.observable.property.ObservableProperty
 
 
 inline fun ObservableProperty<Boolean>.openCloseBinding(
-        startState:Boolean = false,
         crossinline onOpen:()->Unit,
         crossinline onClose:()->Unit
 ): (Boolean) -> Unit {
@@ -19,6 +18,7 @@ inline fun ObservableProperty<Boolean>.openCloseBinding(
             state = newState
         }
     }
-    lambda(startState)
+    lambda(value)
+    add(lambda)
     return lambda
 }
