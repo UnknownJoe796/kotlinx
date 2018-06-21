@@ -1,4 +1,4 @@
-package com.lightningkite.kotlinx.serialization
+package com.lightningkite.kotlinx.string
 
 inline fun Char.isDigit() = this in '0'..'9'
 inline fun Char.isLowercase() = this in 'a' .. 'z'

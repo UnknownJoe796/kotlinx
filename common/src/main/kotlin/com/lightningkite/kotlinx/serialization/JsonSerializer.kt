@@ -1,5 +1,6 @@
 package com.lightningkite.kotlinx.serialization
 
+import com.lightningkite.kotlinx.string.StringReader
 import kotlin.reflect.KClass
 import kotlin.reflect.KClassifier
 import kotlin.reflect.KType

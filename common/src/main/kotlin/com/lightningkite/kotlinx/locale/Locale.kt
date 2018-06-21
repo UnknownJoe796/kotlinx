@@ -9,5 +9,6 @@ class Locale(
         val renderNumber: (value: Number, decimalPositions: Int, maxOtherPositions: Int) -> String,
         val renderDate: (Date) -> String,
         val renderTime: (Time) -> String,
+        val renderDateTime: (DateTime) -> String,
         val renderTimeStamp: (TimeStamp) -> String
 ){}

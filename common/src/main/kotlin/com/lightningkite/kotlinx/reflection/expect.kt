@@ -1,7 +1,5 @@
 package com.lightningkite.kotlinx.reflection
 
-import kotlin.reflect.*
+import kotlin.reflect.KClass
 
-expect val KAnnotatedElement.simpleAnnotations:List<SimpleAnnotation>
-expect val <T:Any> KClass<T>.simpleProperties:Map<String,SimpleProperty1<T, *>>
-expect val <T:Any> KClass<T>.simpleMutableProperties:Map<String,SimpleMutableProperty1<T, *>>
+internal expect fun <T : Any> kxReflect(underlying: KClass<T>): KxClass<T>
