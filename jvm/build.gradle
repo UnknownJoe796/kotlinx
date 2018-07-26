@@ -12,7 +12,6 @@ buildscript {
 }
 
 apply plugin: 'kotlin-platform-jvm'
-apply plugin: 'kotlinx-serialization'
 apply from: '../publishing.gradle'
 
 repositories {
@@ -29,5 +28,4 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:${rootProject.kotlinVersion}"
     testImplementation "org.jetbrains.kotlin:kotlin-test:${rootProject.kotlinVersion}"
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${rootProject.serializationVersion}"
 }

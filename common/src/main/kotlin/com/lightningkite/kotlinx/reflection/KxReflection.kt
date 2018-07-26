@@ -1,44 +1,80 @@
 package com.lightningkite.kotlinx.reflection
 
-data class KxClass<Owner>(
-        val simpleName: String,
-        val qualifiedName: String,
-        val variables: Map<String, KxVariable<Owner, *>>,
-        val functions: List<KxFunction<*>>,
-        val constructors: List<KxFunction<Owner>>,
+interface KxClass<Owner>{
+        val simpleName: String
+        val qualifiedName: String
+        val values: Map<String, KxValue<Owner, *>>
+        val variables: Map<String, KxVariable<Owner, *>>
+        val functions: List<KxFunction<*>>
+        val constructors: List<KxFunction<Owner>>
         val annotations: List<KxAnnotation>
+}
+
+data class KxType(
+        val base: KxClass<*>,
+        val nullable: Boolean = false,
+        val typeParameters: List<KxTypeProjection> = listOf(),
+        val annotations: List<KxAnnotation> = listOf()
 )
 
-data class KxType<Owner>(
-        val base: KxClass<Owner>,
-        val typeParameters: List<KxType<*>>,
-        val annotations: List<KxAnnotation>
-)
+interface KxField<Owner, Type>{
+    val name: String
+    val type: KxType
+    val get: (Owner) -> Type
+    val set: ((Owner, Type) -> Unit)?
+    val annotations: List<KxAnnotation>
+}
+
+data class KxValue<Owner, Type>(
+        override val name: String,
+        override val type: KxType,
+        override val get: (Owner) -> Type,
+        override val annotations: List<KxAnnotation> = listOf()
+):KxField<Owner, Type>{
+    override val set: ((Owner, Type) -> Unit)?
+        get() = null
+}
 
 data class KxVariable<Owner, Type>(
-        val name: String,
-        val type: KxType<Owner>,
-        val get: (Owner) -> Type,
-        val set: ((Owner) -> Type)?,
-        val annotations: List<KxAnnotation>
-)
+        override val name: String,
+        override val type: KxType,
+        override val get: (Owner) -> Type,
+        override val set: (Owner, Type) -> Unit,
+        override val annotations: List<KxAnnotation> = listOf()
+):KxField<Owner, Type>
 
 data class KxArgument(
         val name: String,
-        val type: KxType<*>,
-        val annotations: List<KxAnnotation>
+        val type: KxType,
+        val annotations: List<KxAnnotation> = listOf()
         //Default?
 )
 
 data class KxFunction<Type>(
         val name: String,
-        val type: KxType<Type>,
-        val arguments: List<KxArgument>,
-        val call: (List<Any>) -> Type,
-        val annotations: List<KxAnnotation>
+        val type: KxType,
+        val arguments: List<KxArgument> = listOf(),
+        val call: (List<Any?>) -> Type,
+        val annotations: List<KxAnnotation> = listOf()
 )
 
 data class KxAnnotation(
         val name: String,
-        val arguments: Map<String, Any>
+        val arguments: List<Any> = listOf()
 )
+
+enum class KxVariance {
+    INVARIANT,
+    IN,
+    OUT,
+}
+
+data class KxTypeProjection(
+        val type:KxType,
+        val variance: KxVariance = KxVariance.INVARIANT,
+        val isStar: Boolean = false
+){
+    companion object {
+        val STAR = KxTypeProjection(KxType(Any::class.kxReflect, true), isStar = true)
+    }
+}

@@ -7,19 +7,19 @@ import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 
 class JsonSerializer : Serializer<String> {
-    var writeType: (KType) -> String = {
-        ((it.classifier as? KClass<*>)
-                ?.let { ExternalTypeRegistry[it] } ?: "Unit") +
-                if (it.isMarkedNullable) "?" else ""
-    }
-    var readType: (String) -> KType = {
-        object : KType {
-            override val arguments: List<KTypeProjection>
-                get() = listOf()
-            override val classifier: KClassifier? = ExternalTypeRegistry[it.trimEnd('?')]
-            override val isMarkedNullable: Boolean = it.last() == '?'
-        }
-    }
+//    var writeType: (KType) -> String = {
+//        ((it.classifier as? KClass<*>)
+//                ?.let { ExternalTypeRegistry[it] } ?: "Unit") +
+//                if (it.isMarkedNullable) "?" else ""
+//    }
+//    var readType: (String) -> KType = {
+//        object : KType {
+//            override val arguments: List<KTypeProjection>
+//                get() = listOf()
+//            override val classifier: KClassifier? = ExternalTypeRegistry[it.trimEnd('?')]
+//            override val isMarkedNullable: Boolean = it.last() == '?'
+//        }
+//    }
 
     override fun read(value: String): Any? {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
