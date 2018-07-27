@@ -23,9 +23,6 @@ class JsonWriterTest{
                     writeEntry("boolean"){
                         writeBoolean(true)
                     }
-                    writeEntry("boolean"){
-                        writeBoolean(true)
-                    }
                     writeEntry("list"){
                         writeArray {
                             writeEntry { writeNumber(1) }

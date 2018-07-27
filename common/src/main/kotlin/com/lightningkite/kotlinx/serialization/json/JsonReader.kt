@@ -7,6 +7,12 @@ class JsonReader(reader: Iterator<Char>) {
     val lexer = Lexer(reader)
 
     /**
+     * @return the next value, whatever it may be.
+     * @throws JsonParsingException the next value is not a String.
+     */
+    fun nextAny():Any? = consumeValue { it }
+
+    /**
      * @return the next String.
      * @throws JsonParsingException the next value is not a String.
      */
@@ -152,11 +158,12 @@ class JsonReader(reader: Iterator<Char>) {
     private inline fun <T> consumeValue(convert: (Any?) -> T): T {
         skip()
 
-        val next = lexer.nextToken()
-        if (next.tokenType == TokenType.VALUE) {
-            return convert(next.value)
-        } else {
-            throw KlaxonException("Expected a value but got $next")
+        val next = lexer.peek()
+        return when(next.tokenType) {
+            TokenType.VALUE -> convert(lexer.nextToken().value)
+            TokenType.LEFT_BRACE -> nextObject() as T
+            TokenType.LEFT_BRACKET -> nextArray() as T
+            else -> throw JsonParsingException("Expected some form of value, got something else")
         }
     }
 
