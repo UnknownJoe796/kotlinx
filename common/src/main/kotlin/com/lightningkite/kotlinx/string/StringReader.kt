@@ -1,4 +1,4 @@
-package com.lightningkite.kotlinx.serialization
+package com.lightningkite.kotlinx.string
 
 class StringReader(source: String) : CharIterator() {
     var position:Int = -1

@@ -17,6 +17,9 @@ actual object Locales {
             renderTime = {
                 Date(milliseconds = it.millisecondsSinceMidnight).toLocaleString()
             },
+            renderDateTime = {
+                Date(milliseconds = it.toTimeStamp().millisecondsSinceEpoch).toLocaleString()
+            },
             renderTimeStamp = {
                 Date(milliseconds = it.millisecondsSinceEpoch).toLocaleString()
             }

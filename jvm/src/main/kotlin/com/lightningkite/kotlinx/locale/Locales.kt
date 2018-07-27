@@ -3,7 +3,6 @@ package com.lightningkite.kotlinx.locale
 import java.text.DateFormat
 import java.text.DecimalFormat
 import java.util.*
-import java.util.Date
 
 actual object Locales {
 
@@ -19,25 +18,13 @@ actual object Locales {
                 DecimalFormat("#".repeat(maxOtherPositions) + "." + "#".repeat(decimalPositions)).format(value)
             },
             renderDate = {
-                val date = Calendar.getInstance().apply {
-                    set(Calendar.YEAR, 1970)
-                    set(Calendar.HOUR_OF_DAY, 6)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                    set(Calendar.DAY_OF_YEAR, 1)
-                    add(Calendar.DAY_OF_YEAR, it.daysSinceEpoch)
-                }.time
-                DateFormat.getDateInstance().format(date)
+                DateFormat.getDateInstance().format(it.toJava().time)
             },
             renderTime = {
-                DateFormat.getTimeInstance().format(Calendar.getInstance().apply {
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                    add(Calendar.MILLISECOND, it.millisecondsSinceMidnight)
-                }.time)
+                DateFormat.getTimeInstance().format(it.toJava().time)
+            },
+            renderDateTime = {
+                DateFormat.getDateTimeInstance().format(it.toJava().time)
             },
             renderTimeStamp = {
                 DateFormat.getDateTimeInstance().format(Date(it.millisecondsSinceEpoch))
