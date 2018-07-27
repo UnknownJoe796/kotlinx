@@ -2,6 +2,8 @@ package com.lightningkite.kotlinx.serialization.json
 
 import com.lightningkite.kotlinx.bytes.toHexString
 
+inline fun Appendable.json(write:JsonWriter.()->Unit) = JsonWriter(this).apply(write)
+
 class JsonWriter(val raw: Appendable) {
 
     @Suppress("NOTHING_TO_INLINE")
@@ -74,9 +76,9 @@ class JsonWriter(val raw: Appendable) {
         }
     }
 
-    inline fun writeArray(middle: ObjectWriter.() -> Unit) {
+    inline fun writeArray(middle: ArrayWriter.() -> Unit) {
         raw.append('[')
-        ObjectWriter().middle()
+        ArrayWriter().middle()
         raw.append(']')
     }
 }
