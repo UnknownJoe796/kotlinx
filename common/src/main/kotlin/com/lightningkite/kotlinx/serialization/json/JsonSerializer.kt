@@ -1,6 +1,7 @@
 package com.lightningkite.kotlinx.serialization.json
 
 import com.lightningkite.kotlinx.serialization.Serializer
+import com.lightningkite.kotlinx.serialization.externalName
 import kotlin.reflect.KClass
 
 class JsonSerializer : Serializer<Iterable<Char>> {
@@ -12,12 +13,41 @@ class JsonSerializer : Serializer<Iterable<Char>> {
         else
             writeAny<Any>(item, item::class as KClass<Any>)
     }
+
+
     fun <T: Any> JsonWriter.writeAny(item: T, type: KClass<T>) {
         getWriterUntyped(item::class).invoke(this, item)
     }
 
     fun <T: Any> JsonReader.readAny(type: KClass<T>):T? {
         if(lexer.peek().let{ it.tokenType == TokenType.VALUE && it.value == null }){
+            return null
+        }
+        return getReader(type).invoke(this)
+    }
+
+
+    @Suppress("UNCHECKED_CAST")
+    fun JsonWriter.writeAnyWithType(item: Any?) {
+        if (item == null)
+            writeNull()
+        else
+            writeAnyWithType<Any>(item, item::class as KClass<Any>)
+    }
+
+    fun <T : Any> JsonWriter.writeAnyWithType(item: T, type: KClass<T>) {
+        writeArray {
+            writeEntry {
+                writeString(type.externalName!!)
+            }
+            writeEntry {
+                writeAny(item, type)
+            }
+        }
+    }
+
+    fun <T : Any> JsonReader.readAnyWithType(type: KClass<T>): T? {
+        if (lexer.peek().let { it.tokenType == TokenType.VALUE && it.value == null }) {
             return null
         }
         return getReader(type).invoke(this)

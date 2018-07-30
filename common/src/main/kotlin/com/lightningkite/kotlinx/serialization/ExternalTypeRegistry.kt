@@ -12,3 +12,5 @@ object ExternalTypeRegistry {
         backwards[type] = name
     }
 }
+
+val KClass<*>.externalName get() = ExternalTypeRegistry[this]

@@ -1,13 +1,19 @@
 package com.lightningkite.kotlinx.reflection
 
-interface KxClass<Owner>{
-        val simpleName: String
-        val qualifiedName: String
-        val values: Map<String, KxValue<Owner, *>>
-        val variables: Map<String, KxVariable<Owner, *>>
-        val functions: List<KxFunction<*>>
-        val constructors: List<KxFunction<Owner>>
-        val annotations: List<KxAnnotation>
+interface KxClass<Owner> {
+    val simpleName: String
+    val qualifiedName: String
+
+    val isInterface: Boolean
+    val isOpen: Boolean
+    val isAbstract: Boolean
+    val enumValues: List<Owner>?
+
+    val values: Map<String, KxValue<Owner, *>>
+    val variables: Map<String, KxVariable<Owner, *>>
+    val functions: List<KxFunction<*>>
+    val constructors: List<KxFunction<Owner>>
+    val annotations: List<KxAnnotation>
 }
 
 data class KxType(
@@ -17,7 +23,7 @@ data class KxType(
         val annotations: List<KxAnnotation> = listOf()
 )
 
-interface KxField<Owner, Type>{
+interface KxField<Owner, Type> {
     val name: String
     val type: KxType
     val get: (Owner) -> Type
@@ -30,7 +36,7 @@ data class KxValue<Owner, Type>(
         override val type: KxType,
         override val get: (Owner) -> Type,
         override val annotations: List<KxAnnotation> = listOf()
-):KxField<Owner, Type>{
+) : KxField<Owner, Type> {
     override val set: ((Owner, Type) -> Unit)?
         get() = null
 }
@@ -41,7 +47,7 @@ data class KxVariable<Owner, Type>(
         override val get: (Owner) -> Type,
         override val set: (Owner, Type) -> Unit,
         override val annotations: List<KxAnnotation> = listOf()
-):KxField<Owner, Type>
+) : KxField<Owner, Type>
 
 data class KxArgument(
         val name: String,
@@ -70,10 +76,10 @@ enum class KxVariance {
 }
 
 data class KxTypeProjection(
-        val type:KxType,
+        val type: KxType,
         val variance: KxVariance = KxVariance.INVARIANT,
         val isStar: Boolean = false
-){
+) {
     companion object {
         val STAR = KxTypeProjection(KxType(Any::class.kxReflect, true), isStar = true)
     }
