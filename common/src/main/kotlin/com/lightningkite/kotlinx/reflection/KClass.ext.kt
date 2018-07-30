@@ -8,3 +8,6 @@ var <T : Any> KClass<T>.kxReflect
     set(value) {
         KClass_kxReflect[this] = value
     }
+
+val <T : Any> KClass<T>.kxReflectOrNull
+    get() = KClass_kxReflect[this] as? KxClass<T>

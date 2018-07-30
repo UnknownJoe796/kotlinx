@@ -11,6 +11,20 @@ object ExternalTypeRegistry {
         forwards[name] = type
         backwards[type] = name
     }
+
+    init {
+        register("Any", Any::class)
+        register("Int", Int::class)
+        register("Short", Short::class)
+        register("Byte", Byte::class)
+        register("Long", Long::class)
+        register("Float", Float::class)
+        register("Double", Double::class)
+        register("Boolean", Boolean::class)
+        register("String", String::class)
+        register("List", List::class)
+        register("Map", Map::class)
+    }
 }
 
 val KClass<*>.externalName get() = ExternalTypeRegistry[this]
