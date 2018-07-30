@@ -121,12 +121,33 @@ class JsonReader(reader: Iterator<Char>) {
     }
 
     /**
+     * Tun the closure and then make sure the object is closed (closed brace).
+     */
+    fun <T> midObject(closure: () -> T): T {
+        skip()
+        val result = closure()
+        privateEndObject()
+        return result
+    }
+
+    /**
      * Makes sure that the next token is the beginning of an array (open bracket),
      * consume it, run the closure and then make sure the array is closed (closed bracket).
      */
     fun <T> beginArray(closure: () -> T): T {
         skip()
         privateBeginArray()
+        val result = closure()
+        privateEndArray()
+        return result
+    }
+
+    /**
+     * Makes sure that the next token is the beginning of an array (open bracket),
+     * consume it, run the closure and then make sure the array is closed (closed bracket).
+     */
+    fun <T> midArray(closure: () -> T): T {
+        skip()
         val result = closure()
         privateEndArray()
         return result
