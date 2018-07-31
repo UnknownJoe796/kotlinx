@@ -17,6 +17,7 @@ object KxReflection{
         register(LongReflection)
         register(FloatReflection)
         register(DoubleReflection)
+        register(CharReflection)
         register(StringReflection)
         register(ListReflection)
         register(MapReflection)

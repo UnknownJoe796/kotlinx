@@ -13,6 +13,7 @@ object EnumGenerators {
         }
     }
     val writer: (KClass<*>)->JsonTypeWriter<Any>? = generator@{ type ->
+        if(type.kxReflectOrNull?.enumValues == null) return@generator null
         return@generator { _, value ->
             (value as Enum<*>).name
         }

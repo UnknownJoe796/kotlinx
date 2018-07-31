@@ -17,25 +17,25 @@ class JsonSerializer {
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getReader(forType: KClass<T>) = readers.getOrPut(forType) {
         readerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw IllegalArgumentException("No generator available for type $forType")
+                ?: throw IllegalArgumentException("No reader available for type $forType")
     } as JsonTypeReader<T>
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getWriter(forType: KClass<T>) = writers.getOrPut(forType) {
         writerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw IllegalArgumentException("No generator available for type $forType")
+                ?: throw IllegalArgumentException("No writer available for type $forType")
     } as JsonTypeWriter<T>
 
     @Suppress("UNCHECKED_CAST")
     fun getReaderUntyped(forType: KClass<*>) = readers.getOrPut(forType) {
         readerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw IllegalArgumentException("No generator available for type $forType")
+                ?: throw IllegalArgumentException("No reader available for type $forType")
     }
 
     @Suppress("UNCHECKED_CAST")
     fun getWriterUntyped(forType: KClass<*>) = writers.getOrPut(forType) {
         writerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw IllegalArgumentException("No generator available for type $forType")
+                ?: throw IllegalArgumentException("No writer available for type $forType")
     }
 
     fun <T : Any> setReader(forType: KClass<T>, reader: JsonTypeReader<T>) = readers.put(forType, reader)
@@ -157,5 +157,10 @@ class JsonSerializer {
 
         setReader(Any::class, polyboxReader(Any::class))
         setWriter(Any::class, polyboxWriter(Any::class))
+
+        writerGenerators += EnumGenerators.writer
+        readerGenerators += EnumGenerators.reader
+        writerGenerators += ReflectionGenerators.writerGenerator(this)
+        readerGenerators += ReflectionGenerators.readerGenerator(this)
     }
 }

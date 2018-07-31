@@ -23,6 +23,7 @@ object ExternalTypeRegistry {
         register("Float", Float::class)
         register("Double", Double::class)
         register("String", String::class)
+        register("Char", Char::class)
         register("List", List::class)
         register("Map", Map::class)
     }
