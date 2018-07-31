@@ -1,0 +1,30 @@
+buildscript {
+    ext.kotlin_version = rootProject.kotlinVersion
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.kotlinVersion}"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:${rootProject.dokkaVersion}"
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
+    }
+}
+
+apply plugin: 'kotlin-platform-jvm'
+apply from: '../publishing.gradle'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.kotlinVersion}"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:${rootProject.kotlinVersion}"
+    expectedBy project(':kotlinx-common')
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:${rootProject.kotlinVersion}"
+    testImplementation "org.jetbrains.kotlin:kotlin-test:${rootProject.kotlinVersion}"
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+}
