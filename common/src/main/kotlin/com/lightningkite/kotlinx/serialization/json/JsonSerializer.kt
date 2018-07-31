@@ -1,5 +1,9 @@
 package com.lightningkite.kotlinx.serialization.json
 
+import com.lightningkite.kotlinx.locale.Date
+import com.lightningkite.kotlinx.locale.DateTime
+import com.lightningkite.kotlinx.locale.Time
+import com.lightningkite.kotlinx.locale.TimeStamp
 import com.lightningkite.kotlinx.reflection.KxType
 import com.lightningkite.kotlinx.serialization.ExternalTypeRegistry
 import com.lightningkite.kotlinx.serialization.externalName
@@ -147,6 +151,31 @@ class JsonSerializer {
 
         setReader(String::class) { nextString() }
         setWriter(String::class) { _, it -> writeString(it) }
+
+        setReader(Date::class) { Date(nextInt()) }
+        setWriter(Date::class) { _, it -> writeNumber(it.daysSinceEpoch) }
+
+        setReader(Time::class) { Time(nextInt()) }
+        setWriter(Time::class) { _, it -> writeNumber(it.millisecondsSinceMidnight) }
+
+        setReader(DateTime::class) {
+            beginArray {
+                DateTime(Date(nextInt()), Time(nextInt()))
+            }
+        }
+        setWriter(DateTime::class) { _, it ->
+            writeArray {
+                writeEntry {
+                    writeNumber(it.date.daysSinceEpoch)
+                }
+                writeEntry {
+                    writeNumber(it.time.millisecondsSinceMidnight)
+                }
+            }
+        }
+
+        setReader(TimeStamp::class) { TimeStamp(nextLong()) }
+        setWriter(TimeStamp::class) { _, it -> writeNumber(it.millisecondsSinceEpoch) }
 
         setReader(List::class, ListSerializer.reader(this))
         setWriter(List::class, ListSerializer.writer(this))
