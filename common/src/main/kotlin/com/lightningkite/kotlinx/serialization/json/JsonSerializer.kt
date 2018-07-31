@@ -2,7 +2,6 @@ package com.lightningkite.kotlinx.serialization.json
 
 import com.lightningkite.kotlinx.reflection.KxType
 import com.lightningkite.kotlinx.serialization.ExternalTypeRegistry
-import com.lightningkite.kotlinx.serialization.Serializer
 import com.lightningkite.kotlinx.serialization.externalName
 import kotlin.reflect.KClass
 
@@ -160,7 +159,9 @@ class JsonSerializer {
 
         writerGenerators += EnumGenerators.writer
         readerGenerators += EnumGenerators.reader
+
         writerGenerators += ReflectionGenerators.writerGenerator(this)
-        readerGenerators += ReflectionGenerators.readerGenerator(this)
+        readerGenerators += ReflectionGenerators.readerGeneratorNoArg(this)
+        readerGenerators += ReflectionGenerators.readerGeneratorAnyConstructor(this)
     }
 }

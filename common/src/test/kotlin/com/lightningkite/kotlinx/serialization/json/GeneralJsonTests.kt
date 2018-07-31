@@ -143,7 +143,7 @@ class GeneralJsonTests {
         override val constructors: List<KxFunction<TestClass>> = listOf(KxFunction<TestClass>(
                 name = "",
                 type = KxType(
-                        base = TestClass::class.kxReflect,
+                        base = TestClassReflection,
                         nullable = false,
                         typeParameters = listOf(),
                         annotations = listOf()

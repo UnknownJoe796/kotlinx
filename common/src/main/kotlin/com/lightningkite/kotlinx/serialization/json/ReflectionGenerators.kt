@@ -69,21 +69,30 @@ object ReflectionGenerators {
                 val arguments = HashMap<String, Any?>()
                 val toPlace = ArrayList<Pair<KxVariable<*, *>, Any?>>()
 
+                //Get all of the data
                 beginObject {
                     while(hasNext()){
                         val name = nextName()
                         args[name]?.let{ a ->
-                            toArg
-
+                            val value = readAny<Any>(a.type)
+                            arguments[name] = value
                         } ?: vars[name]?.let{ v ->
-                            readAny<Any>(v.type)
+                            val value = readAny<Any>(v.type)
+                            toPlace.add(v to value)
                         } ?: run {
                             nextAny()
                         }
                     }
                 }
 
-                val instance = constructor.call.invoke(listOf())
+                //Compile the list of arguments for the constructor
+                val constructorArguments = ArrayList<Any?>()
+                for (arg in constructor.arguments) {
+                    val value = arguments[arg.name] ?: arg.default!!.invoke(constructorArguments)
+                    constructorArguments.add(value)
+                }
+
+                val instance = constructor.call.invoke(constructorArguments)
                 for((v, value) in toPlace){
                     v.set.let{
                         @Suppress("UNCHECKED_CAST")
