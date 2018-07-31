@@ -14,13 +14,14 @@ object ExternalTypeRegistry {
 
     init {
         register("Any", Any::class)
-        register("Int", Int::class)
-        register("Short", Short::class)
+        register("Unit", Unit::class)
+        register("Boolean", Boolean::class)
         register("Byte", Byte::class)
+        register("Short", Short::class)
+        register("Int", Int::class)
         register("Long", Long::class)
         register("Float", Float::class)
         register("Double", Double::class)
-        register("Boolean", Boolean::class)
         register("String", String::class)
         register("List", List::class)
         register("Map", Map::class)

@@ -2,12 +2,13 @@ package com.lightningkite.kotlinx.reflection
 
 import kotlin.reflect.KClass
 
-val KClass_kxReflect = HashMap<KClass<*>, KxClass<*>>()
+@Suppress("UNCHECKED_CAST")
 var <T : Any> KClass<T>.kxReflect
-    get() = KClass_kxReflect[this] as KxClass<T>
+    get() = KxReflection.map[this] as KxClass<T>
     set(value) {
-        KClass_kxReflect[this] = value
+        KxReflection.map[this] = value
     }
 
+@Suppress("UNCHECKED_CAST")
 val <T : Any> KClass<T>.kxReflectOrNull
-    get() = KClass_kxReflect[this] as? KxClass<T>
+    get() = KxReflection.map[this] as? KxClass<T>

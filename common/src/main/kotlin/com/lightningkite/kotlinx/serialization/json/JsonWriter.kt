@@ -2,7 +2,10 @@ package com.lightningkite.kotlinx.serialization.json
 
 import com.lightningkite.kotlinx.bytes.toHexString
 
-inline fun Appendable.json(write:JsonWriter.()->Unit) = JsonWriter(this).apply(write)
+inline fun <T: Appendable> T.json(write:JsonWriter.()->Unit): T {
+    JsonWriter(this).apply(write)
+    return this
+}
 
 class JsonWriter(val raw: Appendable) {
 

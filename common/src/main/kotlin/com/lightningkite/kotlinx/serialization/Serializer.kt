@@ -2,10 +2,10 @@ package com.lightningkite.kotlinx.serialization
 
 import kotlin.reflect.KClass
 
-interface Serializer<SER> {
-    fun read(value: SER): Any?
-    fun write(value: Any?): SER
-    fun <T: Any> readType(type: KClass<T>, value: SER): T?
-    fun <T: Any> writeType(type: KClass<T>, value: T?): SER
+interface Serializer<IN> {
+    fun <T: Any> read(type: KClass<T>, value: IN): T?
 }
 
+interface Deserialiazer<OUT> {
+    fun <T: Any> write(type: KClass<T>, value: T?): OUT
+}
