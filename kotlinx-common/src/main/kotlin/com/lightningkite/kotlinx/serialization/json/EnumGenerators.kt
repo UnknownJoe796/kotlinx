@@ -9,7 +9,7 @@ object EnumGenerators {
 
         return@generator { _ ->
             val name = nextString().toLowerCase()
-            mapped[name] ?: throw IllegalArgumentException("Enum value $name not recognized.")
+            mapped[name] ?: throw KlaxonException("Enum value $name not recognized.")
         }
     }
     val writer: (KClass<*>)->JsonTypeWriter<Any>? = generator@{ type ->

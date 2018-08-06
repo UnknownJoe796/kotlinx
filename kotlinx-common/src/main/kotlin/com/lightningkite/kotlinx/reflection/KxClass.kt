@@ -5,6 +5,8 @@ import kotlin.reflect.KClass
 interface KxClass<Owner: Any> {
     val kclass: KClass<Owner>
 
+    val implements: List<KxType>
+
     val simpleName: String
     val qualifiedName: String
 

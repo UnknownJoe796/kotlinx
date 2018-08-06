@@ -23,7 +23,7 @@ object MapSerializer {
                 while(hasNext()) {
                     val keyText = nextName()
                     with(forSerializer){
-                        val key = JsonReader(keyText.iterator()).readAny<Any>(keySubtype)
+                        val key = RawJsonReader(keyText.iterator()).readAny<Any>(keySubtype)
                         output[key] = readAny(valueSubtype)
                     }
                 }

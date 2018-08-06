@@ -6,6 +6,6 @@ interface Serializer<IN> {
     fun <T: Any> read(type: KClass<T>, value: IN): T?
 }
 
-interface Deserialiazer<OUT> {
+interface Deserializer<OUT> {
     fun <T: Any> write(type: KClass<T>, value: T?): OUT
 }

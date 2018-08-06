@@ -12,7 +12,7 @@ data class Post(
 
 object PostReflection : KxClass<Post> {
 
-
+    override val implements: List<KxType> = listOf()
     val userId = KxVariable<Post, Long>(
             name = "userId",
             type = KxType(

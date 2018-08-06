@@ -107,7 +107,8 @@ class GeneralJsonTests {
 
     object TestClassReflection : KxClass<TestClass> {
 
-
+        override val implements: List<KxType>
+            get() = listOf()
         val a = KxVariable<TestClass, Int>(
                 name = "a",
                 type = KxType(

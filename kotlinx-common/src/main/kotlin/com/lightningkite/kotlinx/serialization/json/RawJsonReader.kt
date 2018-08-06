@@ -3,14 +3,14 @@ package com.lightningkite.kotlinx.serialization.json
 /**
  * Manages JSON streaming.
  */
-class JsonReader(reader: Iterator<Char>) {
+class RawJsonReader(reader: Iterator<Char>) {
     val lexer = Lexer(reader)
 
     /**
      * @return the next value, whatever it may be.
      * @throws JsonParsingException the next value is not a String.
      */
-    fun nextAny():Any? = consumeValue { it }
+    fun nextAny(): Any? = consumeValue { it }
 
     /**
      * @return the next String.
@@ -195,7 +195,7 @@ class JsonReader(reader: Iterator<Char>) {
         skip()
 
         val next = lexer.peek()
-        return when(next.tokenType) {
+        return when (next.tokenType) {
             TokenType.VALUE -> convert(lexer.nextToken().value)
             TokenType.LEFT_BRACE -> nextObject() as T
             TokenType.LEFT_BRACKET -> nextArray() as T

@@ -3,7 +3,7 @@ package com.lightningkite.kotlinx.serialization.json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class JsonWriterTest{
+class RawJsonWriterTest {
 
     @Test
     fun test(){

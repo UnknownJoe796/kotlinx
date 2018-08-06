@@ -2,12 +2,12 @@ package com.lightningkite.kotlinx.serialization.json
 
 import com.lightningkite.kotlinx.bytes.toHexString
 
-inline fun <T: Appendable> T.json(write:JsonWriter.()->Unit): T {
-    JsonWriter(this).apply(write)
+inline fun <T : Appendable> T.json(write: RawJsonWriter.() -> Unit): T {
+    RawJsonWriter(this).apply(write)
     return this
 }
 
-class JsonWriter(val raw: Appendable) {
+class RawJsonWriter(val raw: Appendable) {
 
     @Suppress("NOTHING_TO_INLINE")
     inline fun writeNumber(number: Number) {
@@ -50,13 +50,13 @@ class JsonWriter(val raw: Appendable) {
     inner class ObjectWriter() {
         var alreadyWrittenOne = false
 
-        inline fun writeEntry(name: String, writeValue: JsonWriter.() -> Unit) {
+        inline fun writeEntry(name: String, writeValue: RawJsonWriter.() -> Unit) {
             if (alreadyWrittenOne) {
                 raw.append(',')
             }
             writeString(name)
             raw.append(':')
-            this@JsonWriter.writeValue()
+            this@RawJsonWriter.writeValue()
             alreadyWrittenOne = true
         }
     }
@@ -70,11 +70,11 @@ class JsonWriter(val raw: Appendable) {
     inner class ArrayWriter() {
         var alreadyWrittenOne = false
 
-        inline fun writeEntry(writeValue: JsonWriter.() -> Unit) {
+        inline fun writeEntry(writeValue: RawJsonWriter.() -> Unit) {
             if (alreadyWrittenOne) {
                 raw.append(',')
             }
-            this@JsonWriter.writeValue()
+            this@RawJsonWriter.writeValue()
             alreadyWrittenOne = true
         }
     }

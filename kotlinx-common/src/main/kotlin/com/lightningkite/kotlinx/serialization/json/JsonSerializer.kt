@@ -22,25 +22,25 @@ open class JsonSerializer {
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getReader(forType: KClass<T>) = readers.getOrPut(forType) {
         readerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw IllegalArgumentException("No reader available for type $forType")
+                ?: throw KlaxonException("No reader available for type $forType")
     } as JsonTypeReader<T>
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getWriter(forType: KClass<T>) = writers.getOrPut(forType) {
         writerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw IllegalArgumentException("No writer available for type $forType")
+                ?: throw KlaxonException("No writer available for type $forType")
     } as JsonTypeWriter<T>
 
     @Suppress("UNCHECKED_CAST")
     fun getReaderUntyped(forType: KClass<*>) = readers.getOrPut(forType) {
         readerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw IllegalArgumentException("No reader available for type $forType")
+                ?: throw KlaxonException("No reader available for type $forType")
     }
 
     @Suppress("UNCHECKED_CAST")
     fun getWriterUntyped(forType: KClass<*>) = writers.getOrPut(forType) {
         writerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw IllegalArgumentException("No writer available for type $forType")
+                ?: throw KlaxonException("No writer available for type $forType")
     }
 
     fun <T : Any> setReader(forType: KClass<T>, reader: JsonTypeReader<T>) = readers.put(forType, reader)
@@ -49,7 +49,7 @@ open class JsonSerializer {
     fun <T : Any> setWriter(forType: KClass<T>, writer: JsonTypeWriter<T>) = writers.put(forType, writer as JsonTypeWriter<Any>)
 
 
-    var boxWriter: JsonWriter.(KClass<*>, typeInfo: KxType?, Any) -> Unit = { _, typeInfo, value ->
+    var boxWriter: RawJsonWriter.(KClass<*>, typeInfo: KxType?, Any) -> Unit = { _, typeInfo, value ->
         writeArray {
             val useType = when (value) {
                 is List<*> -> List::class
@@ -65,7 +65,7 @@ open class JsonSerializer {
             }
         }
     }
-    var boxReader: JsonReader.() -> Any? = {
+    var boxReader: RawJsonReader.() -> Any? = {
         if (lexer.peek().let { it.tokenType == TokenType.VALUE && it.value == null }) {
             null
         } else beginArray {
@@ -77,15 +77,15 @@ open class JsonSerializer {
 
 
     fun <T : Any> read(type: KClass<T>, additionalTypeInformation: KxType? = null, source: Iterator<Char>): T? {
-        return JsonReader(source).readAny(type, additionalTypeInformation)
+        return RawJsonReader(source).readAny(type, additionalTypeInformation)
     }
 
     fun <T : Any> read(type: KClass<T>, additionalTypeInformation: KxType? = null, source: Iterable<Char>): T? {
-        return JsonReader(source.iterator()).readAny(type, additionalTypeInformation)
+        return RawJsonReader(source.iterator()).readAny(type, additionalTypeInformation)
     }
 
     fun <T : Any> read(type: KClass<T>, additionalTypeInformation: KxType? = null, source: CharSequence): T? {
-        return JsonReader(source.iterator()).readAny(type, additionalTypeInformation)
+        return RawJsonReader(source.iterator()).readAny(type, additionalTypeInformation)
     }
 
     fun <T : Any> write(type: KClass<T>, additionalTypeInformation: KxType? = null, value: T?): StringBuilder {
@@ -96,20 +96,20 @@ open class JsonSerializer {
     }
 
 
-    inline fun <reified T : Any> JsonWriter.writeAny(item: T) = writeAny(item, null, T::class)
+    inline fun <reified T : Any> RawJsonWriter.writeAny(item: T) = writeAny(item, null, T::class)
 
     @Suppress("NOTHING_TO_INLINE")
-    inline fun <T : Any> JsonWriter.writeAny(item: T, additionalTypeInformation: KxType) = writeAny(item, additionalTypeInformation, additionalTypeInformation.base.kclass as KClass<T>)
+    inline fun <T : Any> RawJsonWriter.writeAny(item: T, additionalTypeInformation: KxType) = writeAny(item, additionalTypeInformation, additionalTypeInformation.base.kclass as KClass<T>)
 
-    fun <T : Any> JsonWriter.writeAny(item: T, additionalTypeInformation: KxType? = null, type: KClass<T>) {
+    fun <T : Any> RawJsonWriter.writeAny(item: T, additionalTypeInformation: KxType? = null, type: KClass<T>) {
         getWriterUntyped(type).invoke(this, additionalTypeInformation, item)
     }
 
-    inline fun <reified T : Any> JsonReader.readAny(): T? = readAny(T::class)
+    inline fun <reified T : Any> RawJsonReader.readAny(): T? = readAny(T::class)
     @Suppress("NOTHING_TO_INLINE")
-    inline fun <T : Any> JsonReader.readAny(additionalTypeInformation: KxType): T? = readAny(additionalTypeInformation.base.kclass as KClass<T>, additionalTypeInformation)
+    inline fun <T : Any> RawJsonReader.readAny(additionalTypeInformation: KxType): T? = readAny(additionalTypeInformation.base.kclass as KClass<T>, additionalTypeInformation)
 
-    fun <T : Any> JsonReader.readAny(type: KClass<T>, additionalTypeInformation: KxType? = null): T? {
+    fun <T : Any> RawJsonReader.readAny(type: KClass<T>, additionalTypeInformation: KxType? = null): T? {
         if (lexer.peek().let { it.tokenType == TokenType.VALUE && it.value == null }) {
             return null
         }

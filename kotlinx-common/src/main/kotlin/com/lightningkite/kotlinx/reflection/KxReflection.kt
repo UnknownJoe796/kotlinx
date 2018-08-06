@@ -21,5 +21,6 @@ object KxReflection{
         register(StringReflection)
         register(ListReflection)
         register(MapReflection)
+        register(ServerFunctionReflection)
     }
 }
