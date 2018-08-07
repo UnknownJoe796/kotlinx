@@ -11,4 +11,8 @@ class Locale(
         val renderTime: (Time) -> String,
         val renderDateTime: (DateTime) -> String,
         val renderTimeStamp: (TimeStamp) -> String
-){}
+) {
+    companion object {
+
+    }
+}

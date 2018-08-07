@@ -1,7 +1,11 @@
 package com.lightningkite.kotlinx.locale
 
 
-data class Time(val millisecondsSinceMidnight: Int)
+data class Time(val millisecondsSinceMidnight: Int) {
+    companion object {
+
+    }
+}
 
 val Time.hours:Int
     get() = millisecondsSinceMidnight / TimeConstants.MS_PER_HOUR_INT
