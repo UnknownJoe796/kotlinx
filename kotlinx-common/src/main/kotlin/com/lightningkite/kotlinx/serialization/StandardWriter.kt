@@ -5,12 +5,12 @@ import com.lightningkite.kotlinx.reflection.KxType
 import com.lightningkite.kotlinx.serialization.json.KlaxonException
 import kotlin.reflect.KClass
 
-abstract class StandardWriter<OUT, RESULT> : AnyWriter<OUT, RESULT> {
-    protected val writerGenerators = ArrayList<Pair<Float, AnySubWriterGenerator<OUT, RESULT>>>()
+interface StandardWriter<OUT, RESULT> : AnyWriter<OUT, RESULT> {
+    val writerGenerators: MutableList<Pair<Float, AnySubWriterGenerator<OUT, RESULT>>>
 
-    protected val writers = HashMap<KClass<*>, AnySubWriter<OUT, RESULT>>()
+    val writers: MutableMap<KClass<*>, AnySubWriter<OUT, RESULT>>
 
-    abstract var boxWriter: OUT.(knownTypeInfo: KxType, value: Any) -> RESULT
+    val boxWriter: OUT.(knownTypeInfo: KxType, value: Any?) -> RESULT
 
     override fun writer(type: KClass<*>): AnySubWriter<OUT, RESULT> = writers.getOrPut(type) {
         writerGenerators.asSequence().mapNotNull { it.second.invoke(type) }.firstOrNull()
@@ -25,8 +25,4 @@ abstract class StandardWriter<OUT, RESULT> : AnyWriter<OUT, RESULT> {
     }
 
     override fun write(type: KxType, value: Any?, to: OUT): RESULT = writer(type.base.kclass).invoke(to, value, type)
-
-    init {
-        addWriterGenerator(1f, EnumGenerators.writerGenerator(this))
-    }
 }

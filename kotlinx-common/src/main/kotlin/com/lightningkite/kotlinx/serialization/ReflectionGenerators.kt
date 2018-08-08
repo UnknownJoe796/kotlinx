@@ -10,18 +10,19 @@ object ReflectionGenerators {
             forWriter: AnyWriter<OUT, RESULT>,
             crossinline writeObject: OUT.(
                     keySubtype: KxType,
-                    OBJCONTEXT.() -> Unit
-            ) -> RESULT,
-            crossinline writeField: OBJCONTEXT.(
-                    Any?,
-                    OUT.() -> RESULT
-            ) -> Unit
+                    (
+                            writeField: (
+                                    Any?,
+                                    OUT.() -> RESULT
+                            ) -> Unit
+                    ) -> Unit
+            ) -> RESULT
     ): AnySubWriterGenerator<OUT, RESULT> = generator@{
         val kx = it.kxReflectOrNull ?: return@generator null
         val vars = kx.variables
 
         writer@{ typeInfo, value ->
-            writeObject(stringType) {
+            writeObject(stringType) { writeField ->
                 for (v in vars) {
                     writeField(v.key) {
                         @Suppress("UNCHECKED_CAST")

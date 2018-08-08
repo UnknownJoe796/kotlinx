@@ -5,12 +5,12 @@ import com.lightningkite.kotlinx.reflection.KxType
 import com.lightningkite.kotlinx.serialization.json.KlaxonException
 import kotlin.reflect.KClass
 
-abstract class StandardReader<IN> : AnyReader<IN> {
-    protected val readerGenerators = ArrayList<Pair<Float, AnySubReaderGenerator<IN>>>()
+interface StandardReader<IN> : AnyReader<IN> {
+    val readerGenerators: MutableList<Pair<Float, AnySubReaderGenerator<IN>>>
 
-    protected val readers = HashMap<KClass<*>, AnySubReader<IN>>()
+    val readers: MutableMap<KClass<*>, AnySubReader<IN>>
 
-    abstract var boxReader: IN.(knownTypeInfo: KxType) -> Any?
+    val boxReader: IN.(knownTypeInfo: KxType) -> Any?
 
     override fun reader(type: KClass<*>): AnySubReader<IN> = readers.getOrPut(type) {
         readerGenerators.asSequence().mapNotNull { it.second.invoke(type) }.firstOrNull()
@@ -24,8 +24,4 @@ abstract class StandardReader<IN> : AnyReader<IN> {
     }
 
     override fun read(type: KxType, from: IN): Any? = reader(type.base.kclass).invoke(from, type)
-
-    init {
-        addReaderGenerator(1f, EnumGenerators.readerGenerator(this))
-    }
 }

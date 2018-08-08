@@ -5,52 +5,24 @@ import com.lightningkite.kotlinx.locale.DateTime
 import com.lightningkite.kotlinx.locale.Time
 import com.lightningkite.kotlinx.locale.TimeStamp
 import com.lightningkite.kotlinx.reflection.KxType
-import com.lightningkite.kotlinx.serialization.ExternalTypeRegistry
-import com.lightningkite.kotlinx.serialization.externalName
+import com.lightningkite.kotlinx.reflection.StringReflection
+import com.lightningkite.kotlinx.reflection.kxType
+import com.lightningkite.kotlinx.serialization.*
 import kotlin.reflect.KClass
 
-open class JsonSerializer {
+@Suppress("LeakingThis")
+open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJsonWriter, Unit> {
 
     companion object : JsonSerializer()
 
-    private val readerGenerators = ArrayList<(KClass<*>) -> JsonTypeReader<Any>?>()
-    private val writerGenerators = ArrayList<(KClass<*>) -> JsonTypeWriter<Any>?>()
+    override val readerGenerators: MutableList<Pair<Float, AnySubReaderGenerator<RawJsonReader>>> = ArrayList()
+    override val readers: MutableMap<KClass<*>, AnySubReader<RawJsonReader>> = HashMap()
+    override val writerGenerators: MutableList<Pair<Float, AnySubWriterGenerator<RawJsonWriter, Unit>>> = ArrayList()
+    override val writers: MutableMap<KClass<*>, AnySubWriter<RawJsonWriter, Unit>> = HashMap()
 
-    private val readers = HashMap<KClass<*>, JsonTypeReader<Any>>()
-    private val writers = HashMap<KClass<*>, JsonTypeWriter<Any>>()
-
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Any> getReader(forType: KClass<T>) = readers.getOrPut(forType) {
-        readerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw KlaxonException("No reader available for type $forType")
-    } as JsonTypeReader<T>
-
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Any> getWriter(forType: KClass<T>) = writers.getOrPut(forType) {
-        writerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw KlaxonException("No writer available for type $forType")
-    } as JsonTypeWriter<T>
-
-    @Suppress("UNCHECKED_CAST")
-    fun getReaderUntyped(forType: KClass<*>) = readers.getOrPut(forType) {
-        readerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw KlaxonException("No reader available for type $forType")
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun getWriterUntyped(forType: KClass<*>) = writers.getOrPut(forType) {
-        writerGenerators.asSequence().mapNotNull { it.invoke(forType) }.firstOrNull()
-                ?: throw KlaxonException("No writer available for type $forType")
-    }
-
-    fun <T : Any> setReader(forType: KClass<T>, reader: JsonTypeReader<T>) = readers.put(forType, reader)
-
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Any> setWriter(forType: KClass<T>, writer: JsonTypeWriter<T>) = writers.put(forType, writer as JsonTypeWriter<Any>)
-
-
-    var boxWriter: RawJsonWriter.(KClass<*>, typeInfo: KxType?, Any) -> Unit = { _, typeInfo, value ->
-        writeArray {
+    override var boxWriter: RawJsonWriter.(typeInfo: KxType, Any?) -> Unit = { typeInfo, value ->
+        if (value == null) writeNull()
+        else writeArray {
             val useType = when (value) {
                 is List<*> -> List::class
                 is Map<*, *> -> Map::class
@@ -60,112 +32,101 @@ open class JsonSerializer {
                 writeString(useType.externalName!!)
             }
             writeEntry {
-                @Suppress("UNCHECKED_CAST")
-                writeAny(value, null, useType as KClass<Any>)
+                writer(useType).invoke(this, value, typeInfo)
             }
         }
     }
-    var boxReader: RawJsonReader.() -> Any? = {
+    override var boxReader: RawJsonReader.(typeInfo: KxType) -> Any? = {
         if (lexer.peek().let { it.tokenType == TokenType.VALUE && it.value == null }) {
             null
         } else beginArray {
-            val type = ExternalTypeRegistry[nextString()]
-            @Suppress("UNCHECKED_CAST")
-            readAny<Any>(type as KClass<Any>)
+            val type = ExternalTypeRegistry[nextString()]!!
+            reader(type).invoke(this, type.kxType)
         }
     }
 
 
-    fun <T : Any> read(type: KClass<T>, additionalTypeInformation: KxType? = null, source: Iterator<Char>): T? {
-        return RawJsonReader(source).readAny(type, additionalTypeInformation)
-    }
-
-    fun <T : Any> read(type: KClass<T>, additionalTypeInformation: KxType? = null, source: Iterable<Char>): T? {
-        return RawJsonReader(source.iterator()).readAny(type, additionalTypeInformation)
-    }
-
-    fun <T : Any> read(type: KClass<T>, additionalTypeInformation: KxType? = null, source: CharSequence): T? {
-        return RawJsonReader(source.iterator()).readAny(type, additionalTypeInformation)
-    }
-
-    fun <T : Any> write(type: KClass<T>, additionalTypeInformation: KxType? = null, value: T?): StringBuilder {
-        return StringBuilder().json {
-            if (value == null) writeNull()
-            else writeAny(value, additionalTypeInformation, type)
-        }
-    }
-
-
-    inline fun <reified T : Any> RawJsonWriter.writeAny(item: T) = writeAny(item, null, T::class)
-
-    @Suppress("NOTHING_TO_INLINE")
-    inline fun <T : Any> RawJsonWriter.writeAny(item: T, additionalTypeInformation: KxType) = writeAny(item, additionalTypeInformation, additionalTypeInformation.base.kclass as KClass<T>)
-
-    fun <T : Any> RawJsonWriter.writeAny(item: T, additionalTypeInformation: KxType? = null, type: KClass<T>) {
-        getWriterUntyped(type).invoke(this, additionalTypeInformation, item)
-    }
-
-    inline fun <reified T : Any> RawJsonReader.readAny(): T? = readAny(T::class)
-    @Suppress("NOTHING_TO_INLINE")
-    inline fun <T : Any> RawJsonReader.readAny(additionalTypeInformation: KxType): T? = readAny(additionalTypeInformation.base.kclass as KClass<T>, additionalTypeInformation)
-
-    fun <T : Any> RawJsonReader.readAny(type: KClass<T>, additionalTypeInformation: KxType? = null): T? {
-        if (lexer.peek().let { it.tokenType == TokenType.VALUE && it.value == null }) {
-            return null
-        }
-        return getReader(type).invoke(this, additionalTypeInformation)
-    }
-
-
-    fun <T : Any> polyboxWriter(forType: KClass<T>): JsonTypeWriter<T> = { t, value -> boxWriter.invoke(this, forType, t, value) }
-    fun <T : Any> polyboxReader(forType: KClass<T>): JsonTypeReader<T> = {
+    fun polyboxWriter(forType: KClass<*>): AnySubWriter<RawJsonWriter, Unit> = { value, t -> boxWriter.invoke(this, t, value) }
+    fun polyboxReader(forType: KClass<*>): AnySubReader<RawJsonReader> = {
         @Suppress("UNCHECKED_CAST")
-        boxReader.invoke(this) as T
+        boxReader.invoke(this, it)
+    }
+
+    inline fun <T : Any> setNullableReader(typeKClass: KClass<T>, crossinline read: RawJsonReader.(KxType) -> T) {
+        setReader(typeKClass) {
+            if (lexer.peek().let { it.tokenType == TokenType.VALUE && it.value == null })
+                null
+            else
+                read(it)
+        }
+    }
+
+    inline fun <T : Any> setNullableWriter(typeKClass: KClass<T>, crossinline write: RawJsonWriter.(T, KxType) -> Unit) {
+        setWriter(typeKClass) { it, type ->
+            if (it == null) writeNull()
+            else write(it, type)
+        }
+    }
+
+    inline fun setNullableReaderRaw(typeKClass: KClass<*>, crossinline read: AnySubReader<RawJsonReader>) {
+        readers[typeKClass] = {
+            if (lexer.peek().let { it.tokenType == TokenType.VALUE && it.value == null })
+                null
+            else
+                read(it)
+        }
+    }
+
+    inline fun setNullableWriterRaw(typeKClass: KClass<*>, crossinline write: AnySubWriter<RawJsonWriter, Unit>) {
+        writers[typeKClass] = { it, type ->
+            if (it == null) writeNull()
+            else write(it, type)
+        }
     }
 
     init {
-        setReader(Unit::class) { nextAny(); Unit }
-        setWriter(Unit::class) { _, it -> writeNull() }
+        setNullableReader(Unit::class) { nextAny(); Unit }
+        setNullableWriter(Unit::class) { it, _ -> writeNull() }
 
-        setReader(Int::class) { nextInt() }
-        setWriter(Int::class) { _, it -> writeNumber(it) }
+        setNullableReader(Int::class) { nextInt() }
+        setNullableWriter(Int::class) { it, _ -> writeNumber(it) }
 
-        setReader(Short::class) { nextInt().toShort() }
-        setWriter(Short::class) { _, it -> writeNumber(it) }
+        setNullableReader(Short::class) { nextInt().toShort() }
+        setNullableWriter(Short::class) { it, _ -> writeNumber(it) }
 
-        setReader(Byte::class) { nextInt().toByte() }
-        setWriter(Byte::class) { _, it -> writeNumber(it) }
+        setNullableReader(Byte::class) { nextInt().toByte() }
+        setNullableWriter(Byte::class) { it, _ -> writeNumber(it) }
 
-        setReader(Long::class) { nextLong() }
-        setWriter(Long::class) { _, it -> writeNumber(it) }
+        setNullableReader(Long::class) { nextLong() }
+        setNullableWriter(Long::class) { it, _ -> writeNumber(it) }
 
-        setReader(Float::class) { nextDouble().toFloat() }
-        setWriter(Float::class) { _, it -> writeNumber(it) }
+        setNullableReader(Float::class) { nextDouble().toFloat() }
+        setNullableWriter(Float::class) { it, _ -> writeNumber(it) }
 
-        setReader(Double::class) { nextDouble() }
-        setWriter(Double::class) { _, it -> writeNumber(it) }
+        setNullableReader(Double::class) { nextDouble() }
+        setNullableWriter(Double::class) { it, _ -> writeNumber(it) }
 
-        setReader(Number::class) { nextDouble() }
-        setWriter(Number::class) { _, it -> writeNumber(it) }
+        setNullableReader(Number::class) { nextDouble() }
+        setNullableWriter(Number::class) { it, _ -> writeNumber(it) }
 
-        setReader(Boolean::class) { nextBoolean() }
-        setWriter(Boolean::class) { _, it -> writeBoolean(it) }
+        setNullableReader(Boolean::class) { nextBoolean() }
+        setNullableWriter(Boolean::class) { it, _ -> writeBoolean(it) }
 
-        setReader(String::class) { nextString() }
-        setWriter(String::class) { _, it -> writeString(it) }
+        setNullableReader(String::class) { nextString() }
+        setNullableWriter(String::class) { it, _ -> writeString(it) }
 
-        setReader(Date::class) { Date(nextInt()) }
-        setWriter(Date::class) { _, it -> writeNumber(it.daysSinceEpoch) }
+        setNullableReader(Date::class) { Date(nextInt()) }
+        setNullableWriter(Date::class) { it, _ -> writeNumber(it.daysSinceEpoch) }
 
-        setReader(Time::class) { Time(nextInt()) }
-        setWriter(Time::class) { _, it -> writeNumber(it.millisecondsSinceMidnight) }
+        setNullableReader(Time::class) { Time(nextInt()) }
+        setNullableWriter(Time::class) { it, _ -> writeNumber(it.millisecondsSinceMidnight) }
 
-        setReader(DateTime::class) {
+        setNullableReader(DateTime::class) {
             beginArray {
                 DateTime(Date(nextInt()), Time(nextInt()))
             }
         }
-        setWriter(DateTime::class) { _, it ->
+        setNullableWriter(DateTime::class) { it, _ ->
             writeArray {
                 writeEntry {
                     writeNumber(it.date.daysSinceEpoch)
@@ -176,20 +137,81 @@ open class JsonSerializer {
             }
         }
 
-        setReader(TimeStamp::class) { TimeStamp(nextLong()) }
-        setWriter(TimeStamp::class) { _, it -> writeNumber(it.millisecondsSinceEpoch) }
+        setNullableReader(TimeStamp::class) { TimeStamp(nextLong()) }
+        setNullableWriter(TimeStamp::class) { it, _ -> writeNumber(it.millisecondsSinceEpoch) }
 
-        setReader(List::class, ListSerializer.reader(this))
-        setWriter(List::class, ListSerializer.writer(this))
+        setNullableReaderRaw(List::class, ListReaderWriter.reader(
+                forReader = this,
+                readList = {
+                    beginArray {
+                        while (hasNext()) {
+                            it.invoke(this)
+                        }
+                    }
+                }
+        ))
+        setNullableWriterRaw(List::class, ListReaderWriter.writer<RawJsonWriter, Unit, RawJsonWriter.ArrayWriter>(
+                forWriter = this,
+                writeList = { writeArray(it) },
+                writeEntry = { writeEntry(it) }
+        ))
 
-        setReader(Map::class, MapSerializer.reader(this))
-        setWriter(Map::class, MapSerializer.writer(this))
+        setNullableReaderRaw(Map::class, MapReaderWriter.reader(
+                forReader = this,
+                readObject = { keyType, onField ->
+                    if (keyType.base == StringReflection) {
+                        beginObject {
+                            while (hasNext()) {
+                                onField.invoke(this, nextName())
+                            }
+                        }
+                    } else {
+                        val reader = reader(keyType.base.kclass)
+                        beginObject {
+                            while (hasNext()) {
+                                val key = reader.invoke(RawJsonReader(nextName().iterator()), keyType)
+                                onField.invoke(this, key)
+                            }
+                        }
+                    }
+                }
+        ))
+        setNullableWriterRaw(Map::class, MapReaderWriter.writer(
+                forWriter = this,
+                writeObject = { keyType, action ->
+                    if (keyType.base == StringReflection) {
+                        writeObject {
+                            action.invoke { key, valueWrite ->
+                                writeEntry(key as String, valueWrite)
+                            }
+                        }
+                    } else {
+                        val keyWriter = writer(keyType.base.kclass)
+                        writeObject {
+                            action.invoke { key, valueWrite ->
+                                val stringifiedKey = StringBuilder().also { it ->
+                                    RawJsonWriter(it).let {
+                                        keyWriter.invoke(it, key, keyType)
+                                    }
+                                }.toString()
+                                writeEntry(stringifiedKey, valueWrite)
+                            }
+                        }
+                    }
+                }
+        ))
+
+//        setNullableReader(List::class, ListSerializer.reader(this))
+//        setNullableWriter(List::class, ListSerializer.writer(this))
+//
+//        setNullableReader(Map::class, MapSerializer.reader(this))
+//        setNullableWriter(Map::class, MapSerializer.writer(this))
 
         setReader(Any::class, polyboxReader(Any::class))
         setWriter(Any::class, polyboxWriter(Any::class))
 
-        writerGenerators += EnumGenerators.writer
-        readerGenerators += EnumGenerators.reader
+        addWriterGenerator(1f, EnumGenerators.writerGenerator(this))
+        addReaderGenerator(1f, EnumGenerators.readerGenerator(this))
 
         writerGenerators += ReflectionGenerators.writerGenerator(this)
         readerGenerators += ReflectionGenerators.readerGeneratorNoArg(this)

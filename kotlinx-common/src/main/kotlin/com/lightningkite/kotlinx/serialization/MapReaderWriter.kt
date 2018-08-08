@@ -5,23 +5,24 @@ import com.lightningkite.kotlinx.reflection.KxType
 
 object MapReaderWriter {
 
-    inline fun <OUT, RESULT, OBJCONTEXT> writer(
+    inline fun <OUT, RESULT> writer(
             forWriter: AnyWriter<OUT, RESULT>,
             crossinline writeObject: OUT.(
                     keySubtype: KxType,
-                    OBJCONTEXT.() -> Unit
-            ) -> RESULT,
-            crossinline writeField: OBJCONTEXT.(
-                    Any?,
-                    OUT.() -> RESULT
-            ) -> Unit
+                    action: (
+                            writeField: (
+                                    Any?,
+                                    OUT.() -> RESULT
+                            ) -> Unit
+                    ) -> Unit
+            ) -> RESULT
     ): AnySubWriter<OUT, RESULT> = { value, typeInfo ->
         val keySubtype = typeInfo.typeParameters.getOrNull(0)?.takeUnless { it.isStar }?.type
                 ?: KxType(AnyReflection, true)
         val valueSubtype = typeInfo.typeParameters.getOrNull(1)?.takeUnless { it.isStar }?.type
                 ?: KxType(AnyReflection, true)
         val valueSubtypeWriter = forWriter.writer(valueSubtype.base.kclass)
-        writeObject(keySubtype) {
+        writeObject(keySubtype) { writeField ->
             @Suppress("UNCHECKED_CAST")
             for (entry in value as Map<Any?, Any?>) {
                 writeField(entry.key) {
