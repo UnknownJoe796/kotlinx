@@ -20,7 +20,7 @@ annotation class ForceUnique
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class
+annotation class MeasurementUnit(val unitName: String)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
