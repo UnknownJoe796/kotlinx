@@ -2,12 +2,14 @@ package com.lightningkite.kotlinx.serialization.json
 
 import com.lightningkite.kotlinx.reflection.*
 import com.lightningkite.kotlinx.serialization.ExternalTypeRegistry
+import com.lightningkite.kotlinx.testing.measurePerformance
 import kotlin.test.Test
 
 class GeneralJsonTests {
 
     val serializer = JsonSerializer()
-    init{
+
+    init {
         ExternalTypeRegistry
         KxReflection
         TestClass::class.kxReflect = TestClassReflection
@@ -86,19 +88,97 @@ class GeneralJsonTests {
         println(cycled)
     }
 
+    @Test
+    fun reflectivePerformanceTest() {
+
+        val localSerializer = JsonSerializer()
+
+        val value = TestClass()
+        val asText = localSerializer.write(
+                type = TestClass::class,
+                value = value
+        )
+
+        //Test reflective
+
+        val msSerializeReflect = measurePerformance {
+            localSerializer.write(
+                    type = TestClass::class,
+                    value = value
+            )
+        }
+
+        println("Serialize reflective performance: $msSerializeReflect milliseconds / item")
+        println("Serialize reflective performance: ${1 / (msSerializeReflect / 1000)} items / second")
+
+        val msDeserializeReflect = measurePerformance {
+            localSerializer.read(
+                    type = TestClass::class,
+                    from = asText
+            )
+        }
+
+        println("Deserialize reflective performance: $msDeserializeReflect milliseconds / item")
+        println("Deserialize reflective performance: ${1 / (msDeserializeReflect / 1000)} items / second")
+
+        //Use fast ser now
+        localSerializer.setNullableWriter(TestClass::class) { value, _ ->
+            writeObject {
+                writeEntry("a") {
+                    writeNumber(value.a)
+                }
+                writeEntry("b") {
+                    writeString(value.b)
+                }
+            }
+        }
+        localSerializer.setNullableReader(TestClass::class) { _ ->
+            var a: Int = 0
+            var b: String = ""
+            beginObject {
+                while (hasNext()) {
+                    when (nextName()) {
+                        "a" -> a = nextInt()
+                        "b" -> b = nextString()
+                    }
+                }
+            }
+            TestClass(a, b)
+        }
+
+        //Test direct
+
+        val msSerializeDirect = measurePerformance {
+            localSerializer.write(
+                    type = TestClass::class,
+                    value = value
+            )
+        }
+
+        println("Serialize direct performance: $msSerializeDirect milliseconds / item")
+        println("Serialize direct performance: ${1 / (msSerializeDirect / 1000)} items / second")
+
+        val msDeserializeDirect = measurePerformance {
+            localSerializer.read(
+                    type = TestClass::class,
+                    from = asText
+            )
+        }
+
+        println("Deserialize direct performance: $msDeserializeDirect milliseconds / item")
+        println("Deserialize direct performance: ${1 / (msDeserializeDirect / 1000)} items / second")
 
 
+        //Print comparison
 
-
-
-
-
-
+        println("Serialization reflection overhead: ${msSerializeReflect / msSerializeDirect}")
+        println("Deserialize reflection overhead: ${msDeserializeReflect / msDeserializeDirect}")
+    }
 
 
     data class TestClass(
-            var a:Int = 42,
-            var b:String = "string"
+            var a: Int = 42,
+            var b: String = "string"
     )
 
     object TestClassReflection : KxClass<TestClass> {
