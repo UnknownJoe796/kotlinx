@@ -4,6 +4,7 @@ import com.lightningkite.kotlinx.async.DelayedResultFunction
 import com.lightningkite.kotlinx.async.transform
 import com.lightningkite.kotlinx.httpclient.*
 import com.lightningkite.kotlinx.reflection.KxType
+import com.lightningkite.kotlinx.reflection.kxType
 import kotlin.reflect.KClass
 
 inline fun <reified T : Any> HttpClient.callJson(
@@ -18,8 +19,7 @@ inline fun <reified T : Any> HttpClient.callJson(
         body,
         headers,
         serializer,
-        T::class,
-        null
+        T::class
 )
 
 
@@ -36,7 +36,7 @@ fun <T : Any> HttpClient.callJson(
     ).transform {
         it.copy {
             @Suppress("UNCHECKED_CAST")
-            serializer.read(typeInfo.base.kclass, typeInfo, it) as T
+            serializer.read(typeInfo, it) as T
         }
     }
 }
@@ -48,13 +48,12 @@ fun <T : Any> HttpClient.callJson(
         body: HttpBody,
         headers: Map<String, List<String>> = mapOf(),
         serializer: JsonSerializer = JsonSerializer,
-        type: KClass<T>,
-        typeInfo: KxType? = null
+        type: KClass<T>
 ): DelayedResultFunction<HttpResponse<T>> {
     return callString(
             url, method, body, headers
     ).transform {
-        it.copy { serializer.read(type, typeInfo, it) as T }
+        it.copy { serializer.read(type.kxType, it) as T }
     }
 }
 
@@ -65,17 +64,15 @@ inline fun <reified T : Any> HttpBody.Companion.BJson(
 ) = BJson(
         value = value,
         serializer = serializer,
-        type = T::class,
-        typeInfo = null
+        type = T::class
 )
 
 
 fun <T : Any> HttpBody.Companion.BJson(
         value: T,
         serializer: JsonSerializer = JsonSerializer,
-        type: KClass<T>,
-        typeInfo: KxType? = null
-) = HttpBody.BString("application/json", serializer.write(type, typeInfo, value).toString())
+        type: KClass<T>
+) = HttpBody.BString("application/json", serializer.write(type.kxType, value).toString())
 
 
 @Suppress("UNCHECKED_CAST")
@@ -83,4 +80,4 @@ fun <T : Any> HttpBody.Companion.BJson(
         value: T,
         serializer: JsonSerializer = JsonSerializer,
         typeInfo: KxType
-) = HttpBody.BString("application/json", serializer.write(typeInfo.base.kclass as KClass<T>, typeInfo, value).toString())
+) = HttpBody.BString("application/json", serializer.write(typeInfo, value).toString())

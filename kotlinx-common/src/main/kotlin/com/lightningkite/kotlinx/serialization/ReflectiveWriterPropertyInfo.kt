@@ -9,10 +9,11 @@ data class ReflectiveWriterPropertyInfo<OUT, RESULT>(
         val key: String,
         val valueType: KxType,
         val getter: (Any) -> Any?,
-        val writer: AnySubWriter<OUT, RESULT>
+        val writerObtainer: () -> AnySubWriter<OUT, RESULT>
 ) {
+    val writer by lazy(writerObtainer)
     @Suppress("NOTHING_TO_INLINE")
-    inline fun writeValue(out: OUT, on: Any): RESULT {
+    fun writeValue(out: OUT, on: Any): RESULT {
         return writer.invoke(out, getter(on), valueType)
     }
 }
@@ -24,6 +25,6 @@ fun <OUT, RESULT> KClass<*>.reflectiveWriterData(
             key = it.name,
             valueType = it.type,
             getter = it.get.untyped,
-            writer = anyWriter.writer(this)
+            writerObtainer = { anyWriter.writer(it.type.base.kclass) }
     )
 }

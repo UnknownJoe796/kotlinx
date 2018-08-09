@@ -30,16 +30,14 @@ class GeneralJsonTests {
                 )
         )
         val asText = serializer.write(
-                type = Map::class,
-                additionalTypeInformation = typeInfo,
+                type = typeInfo,
                 value = value
-        ).toString()
+        )
         println(value)
         println(asText)
         val cycled = serializer.read(
-                type = Map::class,
-                additionalTypeInformation = typeInfo,
-                source = asText
+                type = typeInfo,
+                from = asText
         )
         println(cycled)
     }
@@ -60,16 +58,14 @@ class GeneralJsonTests {
                 )
         )
         val asText = serializer.write(
-                type = Map::class,
-                additionalTypeInformation = typeInfo,
+                type = typeInfo,
                 value = value
-        ).toString()
+        )
         println(value)
         println(asText)
         val cycled = serializer.read(
-                type = Map::class,
-                additionalTypeInformation = typeInfo,
-                source = asText
+                type = typeInfo,
+                from = asText
         )
         println(cycled)
     }
@@ -80,12 +76,12 @@ class GeneralJsonTests {
         val asText = serializer.write(
                 type = TestClass::class,
                 value = value
-        ).toString()
+        )
         println(value)
         println(asText)
         val cycled = serializer.read(
                 type = TestClass::class,
-                source = asText
+                from = asText
         )
         println(cycled)
     }

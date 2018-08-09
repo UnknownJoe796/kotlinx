@@ -63,22 +63,6 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
         }
     }
 
-    inline fun setNullableReaderRaw(typeKClass: KClass<*>, crossinline read: AnySubReader<RawJsonReader>) {
-        readers[typeKClass] = {
-            if (lexer.peekIsNull())
-                null
-            else
-                read(it)
-        }
-    }
-
-    inline fun setNullableWriterRaw(typeKClass: KClass<*>, crossinline write: AnySubWriter<RawJsonWriter, Unit>) {
-        writers[typeKClass] = { it, type ->
-            if (it == null) writeNull()
-            else write(it, type)
-        }
-    }
-
     init {
         setReader(Unit::class) { nextAny(); Unit }
         setWriter(Unit::class) { it, _ -> writeNull() }
@@ -249,7 +233,7 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
             return@addReaderGenerator { typeInfo ->
                 if (lexer.peekIsNull()) null
                 else {
-                    val builder = helper.InstanceBuilder()
+                    val builder = helper.instanceBuilder()
                     beginObject {
                         while (hasNext()) {
                             builder.place(nextName(), this) { nextAny() }
@@ -274,4 +258,14 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
             }
         }
     }
+
+    fun read(type: KxType, from: Iterator<Char>) = read(type, RawJsonReader(from))
+    fun read(type: KxType, from: String) = read(type, RawJsonReader(from.iterator()))
+    fun write(type: KxType, value: Any?, to: Appendable) = to.also { write(type, value, RawJsonWriter(it)) }
+    fun write(type: KxType, value: Any?): String = StringBuilder().apply { write(type, value, this) }.toString()
+
+    fun <T : Any> read(type: KClass<T>, from: Iterator<Char>) = read(type.kxType, from)
+    fun <T : Any> read(type: KClass<T>, from: String) = read(type.kxType, from)
+    fun <T : Any> write(type: KClass<T>, value: Any?, to: Appendable) = write(type.kxType, value, to)
+    fun <T : Any> write(type: KClass<T>, value: Any?): String = write(type.kxType, value)
 }

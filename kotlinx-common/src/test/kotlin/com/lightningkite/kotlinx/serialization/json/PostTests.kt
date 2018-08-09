@@ -37,9 +37,8 @@ class PostTests {
         val typeInfo = KxType(ListReflection, false, listOf(KxTypeProjection(KxType(PostReflection, false))))
 
         val cycled = JsonSerializer.read(
-                type = List::class,
-                additionalTypeInformation = typeInfo,
-                source = data
+                type = typeInfo,
+                from = data
         )
         println(cycled)
     }

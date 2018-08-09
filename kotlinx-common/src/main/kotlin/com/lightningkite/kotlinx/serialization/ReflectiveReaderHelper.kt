@@ -6,22 +6,23 @@ import kotlin.reflect.KClass
 class ReflectiveReaderHelper<IN>(
         val type: KClass<*>,
         val kx: KxClass<*>,
-        val constructor: KxFunction<*>,
+        val usingConstructor: KxFunction<*>,
         val args: Map<String, KxArgument>,
         val vars: Map<String, KxVariable<*, *>>,
         val readers: Map<String, AnySubReader<IN>>
 ) {
+    fun instanceBuilder() = InstanceBuilder(this)
 
-    inner class InstanceBuilder {
+    class InstanceBuilder<IN>(val helper: ReflectiveReaderHelper<IN>) {
         val arguments = HashMap<String, Any?>()
         val toPlace = ArrayList<Pair<KxVariable<*, *>, Any?>>()
 
         inline fun place(name: String, input: IN, skipField: () -> Unit) {
-            args[name]?.let { a ->
-                val value = readers[a.name]!!.invoke(input, a.type)
+            helper.args[name]?.let { a ->
+                val value = helper.readers[a.name]!!.invoke(input, a.type)
                 arguments[name] = value
-            } ?: vars[name]?.let { v ->
-                val value = readers[v.name]!!.invoke(input, v.type)
+            } ?: helper.vars[name]?.let { v ->
+                val value = helper.readers[v.name]!!.invoke(input, v.type)
                 toPlace.add(v to value)
             } ?: run {
                 skipField()
@@ -29,7 +30,7 @@ class ReflectiveReaderHelper<IN>(
         }
 
         inline fun build(): Any {
-            val instance = constructor.callGiven(arguments)!!
+            val instance = helper.usingConstructor.callGiven(arguments)!!
             instance.setUntyped(toPlace)
             return instance
         }
@@ -50,7 +51,7 @@ class ReflectiveReaderHelper<IN>(
 
             return ReflectiveReaderHelper(
                     type = type,
-                    constructor = constructor,
+                    usingConstructor = constructor,
                     kx = kx,
                     args = args,
                     vars = vars,
