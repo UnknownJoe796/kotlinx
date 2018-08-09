@@ -4,114 +4,90 @@ import com.lightningkite.kotlinx.reflection.*
 
 object ReflectionGenerators {
 
-    val stringType = KxType(StringReflection)
 
-    inline fun <OUT, RESULT, OBJCONTEXT> writeReflectedGen(
+    inline fun <OUT, RESULT, OBJCONTEXT> generateWriter(
             forWriter: AnyWriter<OUT, RESULT>,
-            crossinline writeObject: OUT.(
-                    keySubtype: KxType,
-                    (
-                            writeField: (
-                                    Any?,
-                                    OUT.() -> RESULT
-                            ) -> Unit
-                    ) -> Unit
-            ) -> RESULT
-    ): AnySubWriterGenerator<OUT, RESULT> = generator@{
-        val kx = it.kxReflectOrNull ?: return@generator null
+            kx: KxClass<*>,
+            crossinline beginObject: OUT.() -> OBJCONTEXT,
+            crossinline writeKey: OBJCONTEXT.(String) -> Unit,
+            crossinline writeValue: OBJCONTEXT.(AnySubWriter<OUT, RESULT>, Any?) -> Unit,
+            crossinline endObject: OBJCONTEXT.() -> RESULT
+    ): AnySubWriter<OUT, RESULT> {
         val vars = kx.variables
+        val writers = vars.values.associate { it.name to forWriter.writer(it.type.base.kclass) }
 
-        writer@{ typeInfo, value ->
-            writeObject(stringType) { writeField ->
-                for (v in vars) {
-                    writeField(v.key) {
-                        @Suppress("UNCHECKED_CAST")
-                        val subValue = v.value.get.let { it as (Any) -> Any? }.invoke(value)
-                        forWriter.write(v.value.type, subValue, this)
-                    }
-                }
+        return writer@{ typeInfo, value ->
+
+            val ctxt = beginObject()
+            for (v in vars) {
+                ctxt.writeKey(v.key)
+                val subValue = v.value.get.untyped.invoke(value)
+                ctxt.writeValue(writers[v.key]!!, subValue)
             }
+            ctxt.endObject()
         }
     }
 
-    inline fun <IN> readReflectedGenNoArg(
+    inline fun <IN> generateNoArgConstructorReader(
+            kx: KxClass<*>,
+            constructor: KxFunction<*>,
             forReader: AnyReader<IN>,
-            crossinline readObject: IN.(
-                    keyType: KxType,
-                    onField: IN.(Any?) -> Unit
-            ) -> Unit,
+            crossinline readObject: IN.() -> Iterator<Pair<String, IN>>,
             crossinline skipField: IN.() -> Unit
-    ): AnySubReaderGenerator<IN> = generator@{
-        val kx = it.kxReflectOrNull ?: return@generator null
-        val constructor = kx.constructors.find { it.arguments.isEmpty() } ?: return@generator null
+    ): AnySubReader<IN> {
         val vars = kx.variables
+        val readers = vars.values.associate { it.name to forReader.reader(it.type.base.kclass) }
 
-        reader@{ _ ->
-            with(forReader) {
-                val instance = constructor.call.invoke(listOf())
-
-                readObject(stringType) { name ->
-                    val v = vars[name]
-                    if (v == null) {
-                        skipField()
-                    } else {
-                        val value = forReader.read(v.type, this)
-                        v.set.untyped.invoke(instance, value)
-                    }
+        return reader@{ _ ->
+            val instance = constructor.call(listOf())!!
+            readObject().forEach { (key, newIn) ->
+                val v = vars[key]
+                if (v == null) {
+                    skipField()
+                } else {
+                    val value = readers[v.name]!!.invoke(newIn, v.type)
+                    v.set.untyped.invoke(instance, value)
                 }
-
-                instance
             }
+            instance
         }
     }
 
-    inline fun <IN> readReflectedGenConstructor(
+    inline fun <IN> generateAnyConstructorReader(
+            kx: KxClass<*>,
+            constructor: KxFunction<*>,
             forReader: AnyReader<IN>,
-            crossinline readObject: IN.(
-                    keyType: KxType,
-                    onField: IN.(Any?) -> Unit
-            ) -> Unit,
+            crossinline readObject: IN.() -> Iterator<Pair<String, IN>>,
             crossinline skipField: IN.() -> Unit
-    ): AnySubReaderGenerator<IN> = generator@{
-        val kx = it.kxReflectOrNull ?: return@generator null
-        val constructor = kx.constructors.firstOrNull()?.takeIf { kx.constructors.size == 1 } ?: return@generator null
+    ): AnySubReader<IN> {
         val args = constructor.arguments.associate { it.name to it }
         val vars = kx.variables
+        val readers = vars.values.associate {
+            it.name to forReader.reader(it.type.base.kclass)
+        } + args.values.associate {
+            it.name to forReader.reader(it.type.base.kclass)
+        }
 
-        reader@{ _ ->
-            with(forReader) {
-                val arguments = HashMap<String, Any?>()
-                val toPlace = ArrayList<Pair<KxVariable<*, *>, Any?>>()
+        return reader@{ _ ->
+            val arguments = HashMap<String, Any?>()
+            val toPlace = ArrayList<Pair<KxVariable<*, *>, Any?>>()
 
-                //Get all of the data
-                readObject(stringType) { name ->
-                    args[name]?.let { a ->
-                        val value = forReader.read(a.type, this)
-                        arguments[name as String] = value
-                    } ?: vars[name]?.let { v ->
-                        val value = forReader.read(v.type, this)
-                        toPlace.add(v to value)
-                    } ?: run {
-                        skipField()
-                    }
+            //Get all of the data
+            readObject().forEach { (name, newIn) ->
+                args[name]?.let { a ->
+                    val value = readers[a.name]!!.invoke(newIn, a.type)
+                    arguments[name] = value
+                } ?: vars[name]?.let { v ->
+                    val value = readers[v.name]!!.invoke(newIn, v.type)
+                    toPlace.add(v to value)
+                } ?: run {
+                    skipField()
                 }
-
-                //Compile the list of arguments for the constructor
-                val constructorArguments = ArrayList<Any?>()
-                for (arg in constructor.arguments) {
-                    val value = arguments[arg.name] ?: arg.default!!.invoke(constructorArguments)
-                    constructorArguments.add(value)
-                }
-
-                val instance = constructor.call.invoke(constructorArguments)
-                for ((v, value) in toPlace) {
-                    v.set.let {
-                        @Suppress("UNCHECKED_CAST")
-                        it as (Any, Any?) -> Unit
-                    }.invoke(instance, value)
-                }
-                instance
             }
+
+            val instance = constructor.callGiven(arguments)!!
+            instance.setUntyped(toPlace)
+            instance
         }
     }
 }

@@ -84,6 +84,13 @@ class Lexer(val reader: Iterator<Char>) : Iterator<Token> {
         return peeked!!
     }
 
+    fun peekIsNull(): Boolean {
+        if (peeked == null) {
+            peeked = actualNextToken()
+        }
+        return peeked!!.let { it.tokenType == TokenType.VALUE && it.value == null }
+    }
+
     override fun next() = nextToken()
     override fun hasNext() = peek() != EOF
 
