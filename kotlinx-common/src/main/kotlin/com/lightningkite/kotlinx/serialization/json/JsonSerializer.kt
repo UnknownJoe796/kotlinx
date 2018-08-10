@@ -1,9 +1,6 @@
 package com.lightningkite.kotlinx.serialization.json
 
-import com.lightningkite.kotlinx.locale.Date
-import com.lightningkite.kotlinx.locale.DateTime
-import com.lightningkite.kotlinx.locale.Time
-import com.lightningkite.kotlinx.locale.TimeStamp
+import com.lightningkite.kotlinx.locale.*
 import com.lightningkite.kotlinx.reflection.AnyReflection
 import com.lightningkite.kotlinx.reflection.KxType
 import com.lightningkite.kotlinx.reflection.StringReflection
@@ -94,30 +91,17 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
         setNullableReader(String::class) { nextString() }
         setNullableWriter(String::class) { it, _ -> writeString(it) }
 
-        setNullableReader(Date::class) { Date(nextInt()) }
-        setNullableWriter(Date::class) { it, _ -> writeNumber(it.daysSinceEpoch) }
+        setNullableReader(Date::class) { Date.iso8601(nextString()) }
+        setNullableWriter(Date::class) { it, _ -> writeString(it.iso8601()) }
 
-        setNullableReader(Time::class) { Time(nextInt()) }
-        setNullableWriter(Time::class) { it, _ -> writeNumber(it.millisecondsSinceMidnight) }
+        setNullableReader(Time::class) { Time.iso8601(nextString()) }
+        setNullableWriter(Time::class) { it, _ -> writeString(it.iso8601()) }
 
-        setNullableReader(DateTime::class) {
-            beginArray {
-                DateTime(Date(nextInt()), Time(nextInt()))
-            }
-        }
-        setNullableWriter(DateTime::class) { it, _ ->
-            writeArray {
-                writeEntry {
-                    writeNumber(it.date.daysSinceEpoch)
-                }
-                writeEntry {
-                    writeNumber(it.time.millisecondsSinceMidnight)
-                }
-            }
-        }
+        setNullableReader(DateTime::class) { DateTime.iso8601(nextString()) }
+        setNullableWriter(DateTime::class) { it, _ -> writeString(it.iso8601()) }
 
-        setNullableReader(TimeStamp::class) { TimeStamp(nextLong()) }
-        setNullableWriter(TimeStamp::class) { it, _ -> writeNumber(it.millisecondsSinceEpoch) }
+        setNullableReader(TimeStamp::class) { TimeStamp.iso8601(nextString()) }
+        setNullableWriter(TimeStamp::class) { it, _ -> writeString(it.iso8601()) }
 
         setNullableReader(List::class) { typeInfo ->
             val valueSubtype = typeInfo.typeParameters.getOrNull(0)?.takeUnless { it.isStar }?.type

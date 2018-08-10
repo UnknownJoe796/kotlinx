@@ -29,6 +29,14 @@ class ReflectiveReaderHelper<IN>(
             }
         }
 
+        inline fun placeManual(name: String, value: Any?) {
+            helper.args[name]?.let { a ->
+                arguments[name] = value
+            } ?: helper.vars[name]?.let { v ->
+                toPlace.add(v to value)
+            }
+        }
+
         inline fun build(): Any {
             val instance = helper.usingConstructor.callGiven(arguments)!!
             instance.setUntyped(toPlace)
