@@ -7,13 +7,11 @@ import kotlin.reflect.KClass
 
 interface StandardReader<IN> : AnyReader<IN> {
     val readerGenerators: MutableList<Pair<Float, AnySubReaderGenerator<IN>>>
-
     val readers: MutableMap<KClass<*>, AnySubReader<IN>>
 
-    val boxReader: IN.(knownTypeInfo: KxType) -> Any?
-
     override fun reader(type: KClass<*>): AnySubReader<IN> = readers.getOrPut(type) {
-        readerGenerators.asSequence().mapNotNull { it.second.invoke(type) }.firstOrNull()
+        CommonSerialization.getDirectSubReader(this, type)
+                ?: readerGenerators.asSequence().mapNotNull { it.second.invoke(type) }.firstOrNull()
                 ?: throw KlaxonException("No reader available for type $type")
     }
 

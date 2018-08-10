@@ -18,7 +18,7 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
     override val writerGenerators: MutableList<Pair<Float, AnySubWriterGenerator<RawJsonWriter, Unit>>> = ArrayList()
     override val writers: MutableMap<KClass<*>, AnySubWriter<RawJsonWriter, Unit>> = HashMap()
 
-    override var boxWriter: RawJsonWriter.(typeInfo: KxType, Any?) -> Unit = { typeInfo, value ->
+    var boxWriter: RawJsonWriter.(typeInfo: KxType, Any?) -> Unit = { typeInfo, value ->
         if (value == null) writeNull()
         else writeArray {
             val useType = when (value) {
@@ -34,7 +34,7 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
             }
         }
     }
-    override var boxReader: RawJsonReader.(typeInfo: KxType) -> Any? = {
+    var boxReader: RawJsonReader.(typeInfo: KxType) -> Any? = {
         if (lexer.peekIsNull()) {
             null
         } else beginArray {

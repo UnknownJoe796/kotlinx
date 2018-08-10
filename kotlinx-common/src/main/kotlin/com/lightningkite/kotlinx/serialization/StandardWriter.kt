@@ -10,10 +10,9 @@ interface StandardWriter<OUT, RESULT> : AnyWriter<OUT, RESULT> {
 
     val writers: MutableMap<KClass<*>, AnySubWriter<OUT, RESULT>>
 
-    val boxWriter: OUT.(knownTypeInfo: KxType, value: Any?) -> RESULT
-
     override fun writer(type: KClass<*>): AnySubWriter<OUT, RESULT> = writers.getOrPut(type) {
-        writerGenerators.asSequence().mapNotNull { it.second.invoke(type) }.firstOrNull()
+        CommonSerialization.getDirectSubWriter(this, type)
+                ?: writerGenerators.asSequence().mapNotNull { it.second.invoke(type) }.firstOrNull()
                 ?: throw KlaxonException("No writer available for type $type")
     }
 
