@@ -2,11 +2,22 @@ package com.lightningkite.kotlinx.reflection
 
 import kotlin.reflect.KClass
 
-object KxReflection{
-    val map = HashMap<KClass<*>, KxClass<*>>()
-    fun register(reflection: KxClass<*>){
-        map[reflection.kclass] = reflection
+object KxReflection {
+    private val kclassToKxClass = HashMap<KClass<*>, KxClass<*>>()
+
+    operator fun <T : Any> get(kclass: KClass<T>): KxClass<T> {
+        @Suppress("UNCHECKED_CAST")
+        return kclassToKxClass.getOrPut(kclass) {
+            EmptyReflection(kclass, "")
+        } as KxClass<T>
     }
+
+    fun register(
+            reflection: KxClass<*>
+    ) {
+        kclassToKxClass[reflection.kclass] = reflection
+    }
+
     init {
         register(AnyReflection)
         register(UnitReflection)

@@ -1,10 +1,7 @@
 package com.lightningkite.kotlinx.serialization.json
 
 import com.lightningkite.kotlinx.locale.*
-import com.lightningkite.kotlinx.reflection.AnyReflection
-import com.lightningkite.kotlinx.reflection.KxType
-import com.lightningkite.kotlinx.reflection.StringReflection
-import com.lightningkite.kotlinx.reflection.kxType
+import com.lightningkite.kotlinx.reflection.*
 import com.lightningkite.kotlinx.serialization.*
 import kotlin.reflect.KClass
 
@@ -27,7 +24,7 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
                 else -> value::class
             }
             writeEntry {
-                writeString(useType.externalName!!)
+                writeString(CommonSerialization.ExternalNames[useType.kxReflect]!!)
             }
             writeEntry {
                 writer(useType).invoke(this, value, typeInfo)
@@ -38,8 +35,8 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
         if (lexer.peekIsNull()) {
             null
         } else beginArray {
-            val type = ExternalTypeRegistry[nextString()]!!
-            reader(type).invoke(this, type.kxType)
+            val type = CommonSerialization.ExternalNames[nextString()]!!
+            reader(type.kclass).invoke(this, type.kxType)
         }
     }
 

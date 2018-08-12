@@ -1,7 +1,12 @@
 package com.lightningkite.kotlinx.serialization.json
 
 import com.lightningkite.kotlinx.reflection.*
-import com.lightningkite.kotlinx.serialization.ExternalTypeRegistry
+import com.lightningkite.kotlinx.serialization.CommonSerialization
+import com.lightningkite.kotlinx.serialization.ExternalName
+import com.lightningkite.kotlinx.server.ConditionOnItem
+import com.lightningkite.kotlinx.server.ConditionOnItemReflection
+import com.lightningkite.kotlinx.server.ModificationOnItem
+import com.lightningkite.kotlinx.server.ModificationOnItemReflection
 import com.lightningkite.kotlinx.testing.measurePerformance
 import kotlin.test.Test
 
@@ -10,10 +15,7 @@ class GeneralJsonTests {
     val serializer = JsonSerializer()
 
     init {
-        ExternalTypeRegistry
-        KxReflection
-        TestClass::class.kxReflect = TestClassReflection
-        ExternalTypeRegistry.register("TestClass", TestClass::class)
+        CommonSerialization.ExternalNames.register(TestClassReflection)
     }
 
     @Test
@@ -83,6 +85,70 @@ class GeneralJsonTests {
         println(asText)
         val cycled = serializer.read(
                 type = TestClass::class,
+                from = asText
+        )
+        println(cycled)
+    }
+
+    @Test
+    fun reflectiveModifierTest() {
+        val value = listOf(ModificationOnItem.Set(TestClassReflection.Fields.a, 23))
+        val typeInfo = KxType(
+                base = ListReflection,
+                nullable = false,
+                typeParameters = listOf(
+                        KxTypeProjection(
+                                KxType(
+                                        base = ModificationOnItemReflection,
+                                        nullable = false,
+                                        typeParameters = listOf(
+                                                KxTypeProjection(KxType(TestClassReflection)),
+                                                KxTypeProjection.STAR
+                                        )
+                                )
+                        )
+                )
+        )
+        val asText = serializer.write(
+                type = typeInfo,
+                value = value
+        )
+        println(value)
+        println(asText)
+        val cycled = serializer.read(
+                type = typeInfo,
+                from = asText
+        )
+        println(cycled)
+    }
+
+    @Test
+    fun reflectiveConditionTest() {
+        val value = listOf(ConditionOnItem.Equal(TestClassReflection.Fields.a, 23))
+        val typeInfo = KxType(
+                base = ListReflection,
+                nullable = false,
+                typeParameters = listOf(
+                        KxTypeProjection(
+                                KxType(
+                                        base = ConditionOnItemReflection,
+                                        nullable = false,
+                                        typeParameters = listOf(
+                                                KxTypeProjection(KxType(TestClassReflection)),
+                                                KxTypeProjection.STAR
+                                        )
+                                )
+                        )
+                )
+        )
+        val asText = serializer.write(
+                type = typeInfo,
+                value = value
+        )
+        println(value)
+        println(asText)
+        val cycled = serializer.read(
+                type = typeInfo,
                 from = asText
         )
         println(cycled)
@@ -176,87 +242,129 @@ class GeneralJsonTests {
     }
 
 
+    @ExternalReflection
+    @ExternalName("TestClass")
     data class TestClass(
             var a: Int = 42,
             var b: String = "string"
     )
 
+
     object TestClassReflection : KxClass<TestClass> {
-
-        override val implements: List<KxType>
-            get() = listOf()
-        val a = KxVariable<TestClass, Int>(
-                name = "a",
-                type = KxType(
-                        base = Int::class.kxReflect,
-                        nullable = false,
-                        typeParameters = listOf(),
-                        annotations = listOf()
-                ),
-                get = { owner -> owner.a as Int },
-                set = { owner, value -> owner.a = value },
-                annotations = listOf()
-        )
-        val b = KxVariable<TestClass, String>(
-                name = "b",
-                type = KxType(
-                        base = String::class.kxReflect,
-                        nullable = false,
-                        typeParameters = listOf(),
-                        annotations = listOf()
-                ),
-                get = { owner -> owner.b as String },
-                set = { owner, value -> owner.b = value },
-                annotations = listOf()
-        )
-
-        override val kclass get() = TestClass::class
-
-        override val simpleName: String = "TestClass"
-        override val qualifiedName: String = "com.lightningkite.kotlinx.reflection.plugin.test.TestClass"
-        override val values: Map<String, KxValue<TestClass, *>> = mapOf()
-        override val variables: Map<String, KxVariable<TestClass, *>> = mapOf("a" to a, "b" to b)
-        override val functions: List<KxFunction<*>> = listOf()
-        override val constructors: List<KxFunction<TestClass>> = listOf(KxFunction<TestClass>(
-                name = "",
-                type = KxType(
-                        base = TestClassReflection,
-                        nullable = false,
-                        typeParameters = listOf(),
-                        annotations = listOf()
-                ),
-                arguments = listOf(KxArgument(
+        object Fields {
+            val a by lazy {
+                KxVariable<TestClass, Int>(
+                        owner = TestClassReflection,
                         name = "a",
-                        type = KxType(
+                        type =
+                        KxType(
                                 base = Int::class.kxReflect,
                                 nullable = false,
-                                typeParameters = listOf(),
-                                annotations = listOf()
-                        ),
-                        annotations = listOf(),
-                        default = { previousArguments -> 42 }
-                ), KxArgument(
+                                typeParameters = listOf(
+                                ),
+                                annotations = listOf(
+                                )
+                        )
+                        ,
+                        get = { owner -> owner.a as Int },
+                        set = { owner, value -> owner.a = value },
+                        annotations = listOf(
+                        )
+                )
+            }
+            val b by lazy {
+                KxVariable<TestClass, String>(
+                        owner = TestClassReflection,
                         name = "b",
-                        type = KxType(
+                        type =
+                        KxType(
                                 base = String::class.kxReflect,
                                 nullable = false,
-                                typeParameters = listOf(),
-                                annotations = listOf()
-                        ),
-                        annotations = listOf(),
-                        default = { previousArguments -> "string" }
-                )),
-                call = { TestClass(it[0] as Int, it[1] as String) },
-                annotations = listOf()
-        ))
-        override val annotations: List<KxAnnotation> = listOf(KxAnnotation(
-                name = "ExternalReflection",
-                arguments = listOf()
-        ))
-
-        override val isInterface: Boolean get() = false
-        override val isOpen: Boolean get() = false
-        override val isAbstract: Boolean get() = false
+                                typeParameters = listOf(
+                                ),
+                                annotations = listOf(
+                                )
+                        )
+                        ,
+                        get = { owner -> owner.b as String },
+                        set = { owner, value -> owner.b = value },
+                        annotations = listOf(
+                        )
+                )
+            }
+        }
+        override val kclass get() = TestClass::class
+        override val implements: List<KxType> by lazy {
+            listOf<KxType>(
+            )
+        }
+        override val simpleName: String = "TestClass"
+        override val qualifiedName: String = "com.lightningkite.kotlinx.reflection.plugin.test.TestClass"
+        override val values: Map<String, KxValue<TestClass, *>> by lazy {
+            mapOf<String, KxValue<TestClass, *>>()
+        }
+        override val variables: Map<String, KxVariable<TestClass, *>> by lazy {
+            mapOf<String, KxVariable<TestClass, *>>("a" to Fields.a, "b" to Fields.b)
+        }
+        override val functions: List<KxFunction<*>> by lazy {
+            listOf<KxFunction<*>>(
+            )
+        }
+        override val constructors: List<KxFunction<TestClass>> by lazy {
+            listOf<KxFunction<TestClass>>(
+                    KxFunction<TestClass>(
+                            name = "TestClass",
+                            type =
+                            KxType(
+                                    base = TestClass::class.kxReflect,
+                                    nullable = false,
+                                    typeParameters = listOf(
+                                    ),
+                                    annotations = listOf(
+                                    )
+                            )
+                            ,
+                            arguments = listOf(
+                                    KxArgument(
+                                            name = "a",
+                                            type =
+                                            KxType(
+                                                    base = Int::class.kxReflect,
+                                                    nullable = false,
+                                                    typeParameters = listOf(
+                                                    ),
+                                                    annotations = listOf(
+                                                    )
+                                            ),
+                                            annotations = listOf(
+                                            ),
+                                            default = { previousArguments -> 42 }
+                                    ),
+                                    KxArgument(
+                                            name = "b",
+                                            type =
+                                            KxType(
+                                                    base = String::class.kxReflect,
+                                                    nullable = false,
+                                                    typeParameters = listOf(
+                                                    ),
+                                                    annotations = listOf(
+                                                    )
+                                            ),
+                                            annotations = listOf(
+                                            ),
+                                            default = { previousArguments -> "string" }
+                                    )
+                            ),
+                            call = { TestClass(it[0] as Int, it[1] as String) },
+                            annotations = listOf(
+                            )
+                    )
+            )
+        }
+        override val annotations: List<KxAnnotation> = listOf<KxAnnotation>(
+        )
+        override val modifiers: List<KxClassModifier> = listOf<KxClassModifier>(KxClassModifier.Data)
         override val enumValues: List<TestClass>? = null
     }
 }

@@ -2,17 +2,20 @@ package com.lightningkite.kotlinx.server
 
 import com.lightningkite.kotlinx.reflection.*
 
+@ExternalReflection
 sealed class ModificationOnItem<in T : Any> {
 
     abstract operator fun invoke(item: T)
 
-    class Set<T : Any, V>(val field: KxVariable<T, V>, val value: V) : ModificationOnItem<T>() {
+    @ExternalReflection
+    data class Set<T : Any, V>(val field: KxVariable<T, V>, val value: V) : ModificationOnItem<T>() {
         override fun invoke(item: T) {
             field.set(item, value)
         }
     }
 
-    class Add<T : Any, V : Number, I>(val field: KxVariable<T, V>, val amount: V) : ModificationOnItem<T>() {
+    @ExternalReflection
+    data class Add<T : Any, V : Number, I>(val field: KxVariable<T, V>, val amount: V) : ModificationOnItem<T>() {
         override fun invoke(item: T) {
             @Suppress("IMPLICIT_CAST_TO_ANY")
             val newValue = when (field.type.base) {
@@ -28,7 +31,8 @@ sealed class ModificationOnItem<in T : Any> {
         }
     }
 
-    class Multiply<T : Any, V : Number, I>(val field: KxVariable<T, V>, val amount: V) : ModificationOnItem<T>() {
+    @ExternalReflection
+    data class Multiply<T : Any, V : Number, I>(val field: KxVariable<T, V>, val amount: V) : ModificationOnItem<T>() {
         override fun invoke(item: T) {
             @Suppress("IMPLICIT_CAST_TO_ANY")
             val newValue = when (field.type.base) {
@@ -44,14 +48,16 @@ sealed class ModificationOnItem<in T : Any> {
         }
     }
 
-    class Place<T : Any, V : MutableCollection<I>, I>(val field: KxField<T, V>, val element: V) : ModificationOnItem<T>() {
+    @ExternalReflection
+    data class Place<T : Any, V : MutableCollection<I>, I>(val field: KxField<T, V>, val element: V) : ModificationOnItem<T>() {
         override fun invoke(item: T) {
             @Suppress("UNCHECKED_CAST")
             field.get(item).add(element as I)
         }
     }
 
-    class Remove<T : Any, V : MutableCollection<I>, I>(val field: KxField<T, V>, val element: V) : ModificationOnItem<T>() {
+    @ExternalReflection
+    data class Remove<T : Any, V : MutableCollection<I>, I>(val field: KxField<T, V>, val element: V) : ModificationOnItem<T>() {
         override fun invoke(item: T) {
             @Suppress("UNCHECKED_CAST")
             field.get(item).remove(element as I)

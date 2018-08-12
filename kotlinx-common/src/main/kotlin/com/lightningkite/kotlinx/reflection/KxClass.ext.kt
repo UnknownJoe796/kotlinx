@@ -15,3 +15,22 @@ inline fun Collection<KxVariable<*, *>>.forEachOnInstance(
     val value = it.get.untyped.invoke(instance)
     action(it, value)
 }
+
+private val KxClass_kxType = HashMap<KxClass<*>, KxType>()
+val <T : Any> KxClass<T>.kxType
+    get() = KxClass_kxType.getOrPut(this) { KxType(this) }
+
+private val KxClass_kxTypeNullable = HashMap<KxClass<*>, KxType>()
+val <T : Any> KxClass<T>.kxTypeNullable
+    get() = KxClass_kxTypeNullable.getOrPut(this) { KxType(this, true) }
+
+val KxClass<*>.canBeExtended: Boolean
+    get() = modifiers.contains(KxClassModifier.Open) ||
+            modifiers.contains(KxClassModifier.Interface) ||
+            modifiers.contains(KxClassModifier.Abstract) ||
+            modifiers.contains(KxClassModifier.Sealed)
+
+val KxClass<*>.canBeInstantiated: Boolean
+    get() = !(modifiers.contains(KxClassModifier.Interface) ||
+            modifiers.contains(KxClassModifier.Abstract) ||
+            modifiers.contains(KxClassModifier.Sealed))

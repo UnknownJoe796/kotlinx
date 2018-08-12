@@ -3,6 +3,7 @@
 buildscript {
     ext.kotlin_version = rootProject.kotlinVersion
     repositories {
+        mavenLocal()
         jcenter()
         mavenCentral()
     }
@@ -10,11 +11,17 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.kotlinVersion}"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:${rootProject.dokkaVersion}"
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
+        classpath 'com.lightningkite.kotlinx:kotlinx-reflect-plugin:1.0.0'
     }
 }
 
 apply plugin: 'kotlin-platform-common'
+apply plugin: 'com.lightningkite.kotlinx.reflection'
 apply from: '../publishing.gradle'
+
+sourceSets {
+    main.kotlin.srcDirs += 'build/gen/reflect'
+}
 
 repositories {
     mavenCentral()

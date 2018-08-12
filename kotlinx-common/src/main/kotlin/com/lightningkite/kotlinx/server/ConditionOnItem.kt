@@ -1,68 +1,85 @@
 package com.lightningkite.kotlinx.server
 
+import com.lightningkite.kotlinx.reflection.ExternalReflection
 import com.lightningkite.kotlinx.reflection.KxField
 
-sealed class ConditionOnItem<in T> {
+@ExternalReflection
+sealed class ConditionOnItem<in T : Any> {
 
     abstract operator fun invoke(item: T): Boolean
 
-    interface OnField<T, V> {
+    @ExternalReflection
+    interface OnField<T : Any, V> {
         val field: KxField<T, V>
     }
 
-    class Never<T> : ConditionOnItem<T>() {
+    @ExternalReflection
+    class Never<T : Any> : ConditionOnItem<T>() {
         override fun invoke(item: T): Boolean = false
     }
 
-    class Always<T> : ConditionOnItem<T>() {
+    @ExternalReflection
+    class Always<T : Any> : ConditionOnItem<T>() {
         override fun invoke(item: T): Boolean = true
     }
 
-    class And<T>(vararg val conditions: ConditionOnItem<T>) : ConditionOnItem<T>() {
+    @ExternalReflection
+    data class And<T : Any>(val conditions: List<ConditionOnItem<T>>) : ConditionOnItem<T>() {
         override fun invoke(item: T): Boolean = conditions.all { it(item) }
     }
 
-    class Or<T>(vararg val conditions: ConditionOnItem<T>) : ConditionOnItem<T>() {
+    @ExternalReflection
+    data class Or<T : Any>(val conditions: List<ConditionOnItem<T>>) : ConditionOnItem<T>() {
         override fun invoke(item: T): Boolean = conditions.any { it(item) }
     }
 
-    class Not<T>(val condition: ConditionOnItem<T>) : ConditionOnItem<T>() {
+    @ExternalReflection
+    data class Not<T : Any>(val condition: ConditionOnItem<T>) : ConditionOnItem<T>() {
         override fun invoke(item: T): Boolean = !condition(item)
     }
 
-    class Equal<T, V>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
+    @ExternalReflection
+    data class Equal<T : Any, V>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
         override fun invoke(item: T): Boolean = field.get.invoke(item) == value
     }
 
-    class EqualToOne<T, V>(override val field: KxField<T, V>, val values: Collection<V>) : ConditionOnItem<T>(), OnField<T, V> {
+    @ExternalReflection
+    data class EqualToOne<T : Any, V>(override val field: KxField<T, V>, val values: Collection<V>) : ConditionOnItem<T>(), OnField<T, V> {
         override fun invoke(item: T): Boolean = field.get.invoke(item) in values
     }
 
-    class NotEqual<T, V>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
+    @ExternalReflection
+    data class NotEqual<T : Any, V>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
         override fun invoke(item: T): Boolean = field.get.invoke(item) != value
     }
 
-    class LessThan<T, V : Comparable<V>>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
+    @ExternalReflection
+    data class LessThan<T : Any, V : Comparable<V>>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
         override fun invoke(item: T): Boolean = field.get.invoke(item) < value
     }
 
-    class GreaterThan<T, V : Comparable<V>>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
+    @ExternalReflection
+    data class GreaterThan<T : Any, V : Comparable<V>>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
         override fun invoke(item: T): Boolean = field.get.invoke(item) > value
     }
 
-    class LessThanOrEqual<T, V : Comparable<V>>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
+    @ExternalReflection
+    data class LessThanOrEqual<T : Any, V : Comparable<V>>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
         override fun invoke(item: T): Boolean = field.get.invoke(item) <= value
     }
 
-    class GreaterThanOrEqual<T, V : Comparable<V>>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
+    @ExternalReflection
+    data class GreaterThanOrEqual<T : Any, V : Comparable<V>>(override val field: KxField<T, V>, val value: V) : ConditionOnItem<T>(), OnField<T, V> {
         override fun invoke(item: T): Boolean = field.get.invoke(item) >= value
     }
 
-    class TextSearch<T, V : CharSequence>(override val field: KxField<T, V>, val query: String) : ConditionOnItem<T>(), OnField<T, V> {
+    @ExternalReflection
+    data class TextSearch<T : Any, V : CharSequence>(override val field: KxField<T, V>, val query: String) : ConditionOnItem<T>(), OnField<T, V> {
         override fun invoke(item: T): Boolean = field.get.invoke(item).contains(query)
     }
 
-    class RegexTextSearch<T, V : CharSequence>(override val field: KxField<T, V>, val query: String) : ConditionOnItem<T>(), OnField<T, V> {
+    @ExternalReflection
+    data class RegexTextSearch<T : Any, V : CharSequence>(override val field: KxField<T, V>, val query: String) : ConditionOnItem<T>(), OnField<T, V> {
         override fun invoke(item: T): Boolean = field.get.invoke(item).contains(Regex(query))
     }
 }

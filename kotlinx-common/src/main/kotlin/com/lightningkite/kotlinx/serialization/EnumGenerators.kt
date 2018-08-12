@@ -1,12 +1,12 @@
 package com.lightningkite.kotlinx.serialization
 
-import com.lightningkite.kotlinx.reflection.kxReflectOrNull
+import com.lightningkite.kotlinx.reflection.kxReflect
 import com.lightningkite.kotlinx.reflection.kxType
 
 object EnumGenerators {
 
     fun <IN> readerGenerator(forReader: StandardReader<IN>): AnySubReaderGenerator<IN> = generator@{ type ->
-        val mapped = type.kxReflectOrNull?.enumValues?.associate { (it as Enum<*>).name.toLowerCase() to it }
+        val mapped = type.kxReflect.enumValues?.associate { (it as Enum<*>).name.toLowerCase() to it }
                 ?: return@generator null
 
         //Cache the reader
@@ -22,7 +22,7 @@ object EnumGenerators {
     fun <OUT, RESULT> writerGenerator(
             forWriter: StandardWriter<OUT, RESULT>
     ): AnySubWriterGenerator<OUT, RESULT> = generator@{ type ->
-        if (type.kxReflectOrNull?.enumValues == null) return@generator null
+        if (type.kxReflect.enumValues == null) return@generator null
 
         //Cache the writer
         val stringWriter = forWriter.writer(String::class)

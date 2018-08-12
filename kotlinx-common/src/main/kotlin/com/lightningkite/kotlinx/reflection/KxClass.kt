@@ -10,9 +10,7 @@ interface KxClass<Owner: Any> {
     val simpleName: String
     val qualifiedName: String
 
-    val isInterface: Boolean
-    val isOpen: Boolean
-    val isAbstract: Boolean
+    val modifiers: List<KxClassModifier>
     val enumValues: List<Owner>?
 
     val values: Map<String, KxValue<Owner, *>>

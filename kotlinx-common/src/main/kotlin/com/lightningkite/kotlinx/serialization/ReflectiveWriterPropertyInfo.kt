@@ -1,7 +1,7 @@
 package com.lightningkite.kotlinx.serialization
 
 import com.lightningkite.kotlinx.reflection.KxType
-import com.lightningkite.kotlinx.reflection.kxReflectOrNull
+import com.lightningkite.kotlinx.reflection.kxReflect
 import com.lightningkite.kotlinx.reflection.untyped
 import kotlin.reflect.KClass
 
@@ -20,7 +20,7 @@ data class ReflectiveWriterPropertyInfo<OUT, RESULT>(
 
 fun <OUT, RESULT> KClass<*>.reflectiveWriterData(
         anyWriter: AnyWriter<OUT, RESULT>
-) = kxReflectOrNull?.variables?.values?.map {
+) = (kxReflect.values.values + kxReflect.variables.values).map {
     ReflectiveWriterPropertyInfo(
             key = it.name,
             valueType = it.type,

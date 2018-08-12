@@ -4,14 +4,10 @@ import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST")
 var <T : Any> KClass<T>.kxReflect
-    get() = KxReflection.map[this] as KxClass<T>
+    get() = KxReflection[this]
     set(value) {
-        KxReflection.map[this] = value
+        KxReflection.register(value)
     }
-
-@Suppress("UNCHECKED_CAST")
-val <T : Any> KClass<T>.kxReflectOrNull
-    get() = KxReflection.map[this] as? KxClass<T>
 
 private val KClass_kxType = HashMap<KClass<*>, KxType>()
 val <T : Any> KClass<T>.kxType

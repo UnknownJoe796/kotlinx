@@ -1,6 +1,7 @@
 package com.lightningkite.kotlinx.reflection
 
-interface KxField<Owner, Type> {
+interface KxField<Owner : Any, Type> {
+    val owner: KxClass<Owner>
     val name: String
     val type: KxType
     val get: (Owner) -> Type

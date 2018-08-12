@@ -3,7 +3,7 @@ package com.lightningkite.kotlinx.serialization.json
 import com.lightningkite.kotlinx.reflection.KxType
 import com.lightningkite.kotlinx.reflection.KxTypeProjection
 import com.lightningkite.kotlinx.reflection.ListReflection
-import com.lightningkite.kotlinx.reflection.kxReflect
+import com.lightningkite.kotlinx.serialization.CommonSerialization
 import kotlin.test.Test
 
 class PostTests {
@@ -32,7 +32,7 @@ class PostTests {
     @Test
     fun reflectiveTest() {
 
-        Post::class.kxReflect = PostReflection
+        CommonSerialization.ExternalNames.register(PostReflection)
 
         val typeInfo = KxType(ListReflection, false, listOf(KxTypeProjection(KxType(PostReflection, false))))
 

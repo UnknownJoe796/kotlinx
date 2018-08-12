@@ -47,7 +47,7 @@ class ReflectiveReaderHelper<IN>(
     companion object {
         fun <IN> tryInit(type: KClass<*>, forReader: AnyReader<IN>): ReflectiveReaderHelper<IN>? {
 
-            val kx = type.kxReflectOrNull ?: return null
+            val kx = type.kxReflect
             val constructor = kx.constructors.firstOrNull() ?: return null
             val args = constructor.arguments.associate { it.name to it }
             val vars = kx.variables

@@ -19,5 +19,5 @@ object StringReflection : EmptyReflection<String>(String::class, "kotlin.String"
 object ListReflection : EmptyReflection<List<*>>(List::class, "kotlin.List")
 object MapReflection : EmptyReflection<Map<*, *>>(Map::class, "kotlin.Map")
 object ServerFunctionReflection : EmptyReflection<ServerFunction<*>>(ServerFunction::class, "com.lightningkite.kotlinx.server.ServerFunction") {
-    override val isInterface: Boolean = true
+    override val modifiers: List<KxClassModifier> = listOf(KxClassModifier.Interface)
 }

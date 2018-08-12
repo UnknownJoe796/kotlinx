@@ -1,8 +1,5 @@
 # Tasks
 
-- Reflection annotations for fields
-- Ser/des class and field references
-- Ser/des conditions and modifiers
 - Server authentication tools
 - Server general ORM
 - Server external ORM endpoints
@@ -18,6 +15,7 @@
 - Auto-generate test data? (reflection with annotations)
     - Might help greatly with testing
 - Unit-conversion?
+- Server Websocket Request object?
 
 # In Progress
 
@@ -29,3 +27,7 @@
 # Done
 
 - Client Websocket
+- Websocket with JSON
+- Reflection annotations for fields
+- Ser/des conditions and modifiers
+- Ser/des class and field references
