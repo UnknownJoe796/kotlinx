@@ -6,15 +6,15 @@ object ReflectionGenerators {
 
 
     inline fun <OUT, RESULT, OBJCONTEXT> generateWriter(
-            forWriter: AnyWriter<OUT, RESULT>,
+            forWriterRepository: TypeWriterRepository<OUT, RESULT>,
             kx: KxClass<*>,
             crossinline beginObject: OUT.() -> OBJCONTEXT,
             crossinline writeKey: OBJCONTEXT.(String) -> Unit,
-            crossinline writeValue: OBJCONTEXT.(AnySubWriter<OUT, RESULT>, Any?) -> Unit,
+            crossinline writeValue: OBJCONTEXT.(TypeWriter<OUT, RESULT>, Any?) -> Unit,
             crossinline endObject: OBJCONTEXT.() -> RESULT
-    ): AnySubWriter<OUT, RESULT> {
+    ): TypeWriter<OUT, RESULT> {
         val vars = kx.variables
-        val writers = vars.values.associate { it.name to forWriter.writer(it.type.base.kclass) }
+        val writers = vars.values.associate { it.name to forWriterRepository.writer(it.type.base.kclass) }
 
         return writer@{ typeInfo, value ->
 
@@ -31,12 +31,12 @@ object ReflectionGenerators {
     inline fun <IN> generateNoArgConstructorReader(
             kx: KxClass<*>,
             constructor: KxFunction<*>,
-            forReader: AnyReader<IN>,
+            forReaderRepository: TypeReaderRepository<IN>,
             crossinline readObject: IN.() -> Iterator<Pair<String, IN>>,
             crossinline skipField: IN.() -> Unit
-    ): AnySubReader<IN> {
+    ): TypeReader<IN> {
         val vars = kx.variables
-        val readers = vars.values.associate { it.name to forReader.reader(it.type.base.kclass) }
+        val readers = vars.values.associate { it.name to forReaderRepository.reader(it.type.base.kclass) }
 
         return reader@{ _ ->
             val instance = constructor.call(listOf())!!
@@ -56,16 +56,16 @@ object ReflectionGenerators {
     inline fun <IN> generateAnyConstructorReader(
             kx: KxClass<*>,
             constructor: KxFunction<*>,
-            forReader: AnyReader<IN>,
+            forReaderRepository: TypeReaderRepository<IN>,
             crossinline readObject: IN.() -> Iterator<Pair<String, IN>>,
             crossinline skipField: IN.() -> Unit
-    ): AnySubReader<IN> {
+    ): TypeReader<IN> {
         val args = constructor.arguments.associate { it.name to it }
         val vars = kx.variables
         val readers = vars.values.associate {
-            it.name to forReader.reader(it.type.base.kclass)
+            it.name to forReaderRepository.reader(it.type.base.kclass)
         } + args.values.associate {
-            it.name to forReader.reader(it.type.base.kclass)
+            it.name to forReaderRepository.reader(it.type.base.kclass)
         }
 
         return reader@{ _ ->

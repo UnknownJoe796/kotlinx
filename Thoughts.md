@@ -1,5 +1,6 @@
 # Tasks
 
+- Server Websocket Request object?
 - Server authentication tools
 - Server general ORM
 - Server external ORM endpoints
@@ -11,11 +12,15 @@
     
 # Ideas
 
+- Generalize HTTP serialization?
+- Cross-platform general input (controllers, keyboard, mouse, touch)
+- Cross-platform maps view
+- Cross-platform OpenGL + NanoVG
 - Remake `JsonSerializer` for performance (low-level)
+- Use Kotlin 1.3 shim for SuccessOrFailure with Http?
 - Auto-generate test data? (reflection with annotations)
     - Might help greatly with testing
 - Unit-conversion?
-- Server Websocket Request object?
 
 # In Progress
 
@@ -26,6 +31,7 @@
 
 # Done
 
+- Add content type to serializers
 - Client Websocket
 - Websocket with JSON
 - Reflection annotations for fields

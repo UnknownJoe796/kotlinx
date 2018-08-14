@@ -33,5 +33,5 @@ fun <S, T> ObservableProperty<S>.transform(mapper: (S) -> T): ObservableProperty
     return ObservablePropertyMapped(this, mapper)
 }
 
-@Deprecated("This is the same as using 'transform'.", ReplaceWith("this.transform(getterFun)", "com.lightningkite.kotlin.observable.property.transform"))
+@Deprecated("This is the same as using 'map'.", ReplaceWith("this.map(getterFun)", "com.lightningkite.kotlin.observable.property.map"))
 fun <A, B> ObservableProperty<A>.sub(getterFun: (A) -> B) = ObservablePropertyMapped(this, getterFun)

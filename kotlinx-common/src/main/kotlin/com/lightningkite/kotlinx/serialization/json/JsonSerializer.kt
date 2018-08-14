@@ -6,14 +6,18 @@ import com.lightningkite.kotlinx.serialization.*
 import kotlin.reflect.KClass
 
 @Suppress("LeakingThis")
-open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJsonWriter, Unit> {
+open class JsonSerializer :
+        StandardReaderRepository<RawJsonReader>,
+        StandardWriterRepository<RawJsonWriter, Unit>,
+        StringSerializer {
+    override val contentType: String = "application/json"
 
     companion object : JsonSerializer()
 
-    override val readerGenerators: MutableList<Pair<Float, AnySubReaderGenerator<RawJsonReader>>> = ArrayList()
-    override val readers: MutableMap<KClass<*>, AnySubReader<RawJsonReader>> = HashMap()
-    override val writerGenerators: MutableList<Pair<Float, AnySubWriterGenerator<RawJsonWriter, Unit>>> = ArrayList()
-    override val writers: MutableMap<KClass<*>, AnySubWriter<RawJsonWriter, Unit>> = HashMap()
+    override val readerGenerators: MutableList<Pair<Float, TypeReaderGenerator<RawJsonReader>>> = ArrayList()
+    override val readers: MutableMap<KClass<*>, TypeReader<RawJsonReader>> = HashMap()
+    override val writerGenerators: MutableList<Pair<Float, TypeWriterGenerator<RawJsonWriter, Unit>>> = ArrayList()
+    override val writers: MutableMap<KClass<*>, TypeWriter<RawJsonWriter, Unit>> = HashMap()
 
     var boxWriter: RawJsonWriter.(typeInfo: KxType, Any?) -> Unit = { typeInfo, value ->
         if (value == null) writeNull()
@@ -184,8 +188,8 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
             }
         }
 
-        val polyboxWriter: AnySubWriter<RawJsonWriter, Unit> = { value, t -> boxWriter.invoke(this, t, value) }
-        val polyboxReader: AnySubReader<RawJsonReader> = {
+        val polyboxWriter: TypeWriter<RawJsonWriter, Unit> = { value, t -> boxWriter.invoke(this, t, value) }
+        val polyboxReader: TypeReader<RawJsonReader> = {
             @Suppress("UNCHECKED_CAST")
             boxReader.invoke(this, it)
         }
@@ -240,13 +244,15 @@ open class JsonSerializer : StandardReader<RawJsonReader>, StandardWriter<RawJso
         }
     }
 
-    fun read(type: KxType, from: Iterator<Char>) = read(type, RawJsonReader(from))
-    fun read(type: KxType, from: String) = read(type, RawJsonReader(from.iterator()))
-    fun write(type: KxType, value: Any?, to: Appendable) = to.also { write(type, value, RawJsonWriter(it)) }
-    fun write(type: KxType, value: Any?): String = StringBuilder().apply { write(type, value, this) }.toString()
+    override fun write(value: Any?, type: KxType): String {
+        return StringBuilder().apply { write(type, value, RawJsonWriter(this)) }.toString()
+    }
 
-    fun <T : Any> read(type: KClass<T>, from: Iterator<Char>) = read(type.kxType, from)
-    fun <T : Any> read(type: KClass<T>, from: String) = read(type.kxType, from)
-    fun <T : Any> write(type: KClass<T>, value: Any?, to: Appendable) = write(type.kxType, value, to)
-    fun <T : Any> write(type: KClass<T>, value: Any?): String = write(type.kxType, value)
+    override fun read(from: String, type: KxType): Any? {
+        return read(type, RawJsonReader(from.iterator()))
+    }
+
+    fun readCharIterator(from: CharIterator, type: KxType): Any? = read(type, RawJsonReader(from))
+    fun writeToAppendable(appendable: Appendable, value: Any?, type: KxType) =
+            write(type, value, RawJsonWriter(appendable))
 }

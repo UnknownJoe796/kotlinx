@@ -9,7 +9,7 @@ class ReflectiveReaderHelper<IN>(
         val usingConstructor: KxFunction<*>,
         val args: Map<String, KxArgument>,
         val vars: Map<String, KxVariable<*, *>>,
-        val readers: Map<String, AnySubReader<IN>>
+        val readers: Map<String, TypeReader<IN>>
 ) {
     fun instanceBuilder() = InstanceBuilder(this)
 
@@ -45,16 +45,16 @@ class ReflectiveReaderHelper<IN>(
     }
 
     companion object {
-        fun <IN> tryInit(type: KClass<*>, forReader: AnyReader<IN>): ReflectiveReaderHelper<IN>? {
+        fun <IN> tryInit(type: KClass<*>, forReaderRepository: TypeReaderRepository<IN>): ReflectiveReaderHelper<IN>? {
 
             val kx = type.kxReflect
             val constructor = kx.constructors.firstOrNull() ?: return null
             val args = constructor.arguments.associate { it.name to it }
             val vars = kx.variables
             val readers = vars.values.associate {
-                it.name to forReader.reader(it.type.base.kclass)
+                it.name to forReaderRepository.reader(it.type.base.kclass)
             } + args.values.associate {
-                it.name to forReader.reader(it.type.base.kclass)
+                it.name to forReaderRepository.reader(it.type.base.kclass)
             }
 
             return ReflectiveReaderHelper(

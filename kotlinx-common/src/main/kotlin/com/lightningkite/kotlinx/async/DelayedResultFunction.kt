@@ -10,7 +10,7 @@ fun <A, B> DelayedResultFunction<A>.then(makeNext:(A)->DelayedResultFunction<B>)
     }
 }
 
-inline fun <A, B> DelayedResultFunction<A>.transform(crossinline transform:(A)->B):DelayedResultFunction<B> {
+inline fun <A, B> DelayedResultFunction<A>.map(crossinline transform: (A) -> B): DelayedResultFunction<B> {
     return { callbackB ->
         this.invoke {
             callbackB.invoke(transform.invoke(it) )

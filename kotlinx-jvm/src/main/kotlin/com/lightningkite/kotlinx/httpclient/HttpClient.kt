@@ -23,16 +23,16 @@ actual object HttpClient {
 
     fun <T> Response.toKotlin(read: Response.() -> T): HttpResponse<T> {
         return if (code() / 100 == 2) {
-            HttpResponse.Success(
+            HttpResponse(
                     code = code(),
                     headers = headers().toMultimap(),
-                    result = read()
+                    result = SuccessOrFailure.success(read())
             )
         } else {
-            HttpResponse.Failure(
+            HttpResponse(
                     code = code(),
                     headers = headers().toMultimap(),
-                    message = body()?.string() ?: ""
+                    result = SuccessOrFailure.failure(HttpException(body()?.string() ?: ""))
             )
         }
     }
@@ -51,12 +51,7 @@ actual object HttpClient {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 resultThread.invoke {
-                    callback.invoke(HttpResponse.Failure<String>(
-                            code = 0,
-                            headers = mapOf(),
-                            message = e.message ?: "",
-                            exception = e as? Exception
-                    ))
+                    callback.invoke(HttpResponse.failure(e))
                 }
             }
 
@@ -83,12 +78,7 @@ actual object HttpClient {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 resultThread.invoke {
-                    callback.invoke(HttpResponse.Failure<ByteArray>(
-                            code = 0,
-                            headers = mapOf(),
-                            message = e.message ?: "",
-                            exception = e as? Exception
-                    ))
+                    callback.invoke(HttpResponse.failure(e))
                 }
             }
 
@@ -99,5 +89,19 @@ actual object HttpClient {
             }
 
         })
+    }
+
+    actual fun socket(url: String): DelayedResultFunction<SuccessOrFailure<HttpWebSocket>> = { callback ->
+        try {
+            val handler = HttpWebSocketHandler()
+            val underlying = HttpClient.okClient.newWebSocket(
+                    Request.Builder().url(url).build(),
+                    handler
+            )
+            handler.init(underlying, callback)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            callback.invoke(SuccessOrFailure.failure(e))
+        }
     }
 }

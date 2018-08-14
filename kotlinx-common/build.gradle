@@ -1,8 +1,7 @@
-
-
 buildscript {
     ext.kotlin_version = rootProject.kotlinVersion
     repositories {
+        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
         mavenLocal()
         jcenter()
         mavenCentral()
@@ -18,6 +17,13 @@ buildscript {
 apply plugin: 'kotlin-platform-common'
 apply plugin: 'com.lightningkite.kotlinx.reflection'
 apply from: '../publishing.gradle'
+
+task listrepos {
+    doLast {
+        println "Repositories:"
+        project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
+    }
+}
 
 sourceSets {
     main.kotlin.srcDirs += 'build/gen/reflect'

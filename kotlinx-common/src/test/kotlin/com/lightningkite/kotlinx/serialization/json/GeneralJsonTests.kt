@@ -78,13 +78,13 @@ class GeneralJsonTests {
     fun reflectiveTest() {
         val value = TestClass()
         val asText = serializer.write(
-                type = TestClass::class,
+                type = TestClass::class.kxType,
                 value = value
         )
         println(value)
         println(asText)
         val cycled = serializer.read(
-                type = TestClass::class,
+                type = TestClass::class.kxType,
                 from = asText
         )
         println(cycled)
@@ -161,7 +161,7 @@ class GeneralJsonTests {
 
         val value = TestClass()
         val asText = localSerializer.write(
-                type = TestClass::class,
+                type = TestClass::class.kxType,
                 value = value
         )
 
@@ -169,7 +169,7 @@ class GeneralJsonTests {
 
         val msSerializeReflect = measurePerformance {
             localSerializer.write(
-                    type = TestClass::class,
+                    type = TestClass::class.kxType,
                     value = value
             )
         }
@@ -179,7 +179,7 @@ class GeneralJsonTests {
 
         val msDeserializeReflect = measurePerformance {
             localSerializer.read(
-                    type = TestClass::class,
+                    type = TestClass::class.kxType,
                     from = asText
             )
         }
@@ -216,7 +216,7 @@ class GeneralJsonTests {
 
         val msSerializeDirect = measurePerformance {
             localSerializer.write(
-                    type = TestClass::class,
+                    type = TestClass::class.kxType,
                     value = value
             )
         }
@@ -226,7 +226,7 @@ class GeneralJsonTests {
 
         val msDeserializeDirect = measurePerformance {
             localSerializer.read(
-                    type = TestClass::class,
+                    type = TestClass::class.kxType,
                     from = asText
             )
         }

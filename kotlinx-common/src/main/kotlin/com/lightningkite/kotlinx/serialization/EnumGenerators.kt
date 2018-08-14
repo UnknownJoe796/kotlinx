@@ -5,7 +5,7 @@ import com.lightningkite.kotlinx.reflection.kxType
 
 object EnumGenerators {
 
-    fun <IN> readerGenerator(forReader: StandardReader<IN>): AnySubReaderGenerator<IN> = generator@{ type ->
+    fun <IN> readerGenerator(forReader: StandardReaderRepository<IN>): TypeReaderGenerator<IN> = generator@{ type ->
         val mapped = type.kxReflect.enumValues?.associate { (it as Enum<*>).name.toLowerCase() to it }
                 ?: return@generator null
 
@@ -20,8 +20,8 @@ object EnumGenerators {
     }
 
     fun <OUT, RESULT> writerGenerator(
-            forWriter: StandardWriter<OUT, RESULT>
-    ): AnySubWriterGenerator<OUT, RESULT> = generator@{ type ->
+            forWriter: StandardWriterRepository<OUT, RESULT>
+    ): TypeWriterGenerator<OUT, RESULT> = generator@{ type ->
         if (type.kxReflect.enumValues == null) return@generator null
 
         //Cache the writer

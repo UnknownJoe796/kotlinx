@@ -22,5 +22,8 @@ expect object HttpClient{
             headers:Map<String, List<String>> = mapOf()
     ):DelayedResultFunction<HttpResponse<ByteArray>>
 
+    fun socket(
+            url: String
+    ): DelayedResultFunction<SuccessOrFailure<HttpWebSocket>>
 }
 
